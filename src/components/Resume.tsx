@@ -21,81 +21,60 @@ const Resume: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     setDownloading(true);
     
-    // Generate PDF content as text (in real implementation, you'd use a PDF library)
-    const resumeContent = `
-SUGAM ADHIKARI
-Data Science Student & Full-Stack Developer
-Email: sugam.19217113@gmail.com
-LinkedIn: linkedin.com/in/sugamadhikari
-GitHub: github.com/sugamadhikari11
-Location: Kathmandu, Nepal
+    try {
+      // First check if the file exists and is accessible
+      const response = await fetch('/resume.pdf');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      // Get the blob from the response
+      const blob = await response.blob();
+      
+      // Check if the blob has content
+      if (blob.size === 0) {
+        throw new Error('PDF file is empty');
+      }
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'Sugam_Adhikari_Resume.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      console.log(`✅ PDF downloaded successfully (${blob.size} bytes)`);
+    } catch (error) {
+      console.error('❌ Download failed:', error);
+      alert(`Download failed: ${error.message}\n\nPlease check:\n1. File exists at /public/resume.pdf\n2. File is not corrupted\n3. File has proper permissions`);
+    }
 
-EDUCATION
-BSc (Hons) in Data Science
-Birmingham City University via Sunway International College
-2023 - Present
-
-PROFESSIONAL EXPERIENCE
-
-Full-stack Developer (July 2025 - Present)
-• Building multi-vendor e-commerce platform with Next.js & MongoDB
-• Implementing scalable architecture for multiple vendor management
-• Developing payment integration and order management systems
-
-Blockchain Developer Intern @ Clock b Business Technology (March 2025 - June 2025)
-• Contributed to NovaChain DeFi project (swap, lending, staking)
-• Focused on smart contract logic and protocol security
-• Collaborated with cross-functional teams on blockchain solutions
-
-Blockchain Trainee (December 2024 - February 2025)
-• Developed lottery DApp and NFT auction platform
-• Implemented transparent draws and on-chain asset transfers
-• Built decentralized systems using Solidity and Web3.js
-
-TECHNICAL SKILLS
-
-Frontend: React.js, Next.js, TypeScript, Tailwind CSS, HTML5, CSS3, Responsive Design
-Blockchain: Solidity, Web3.js, ethers.js, Smart Contracts, DApps, MetaMask Integration, NFT Development
-Data Science: Python, R, Power BI, Data Visualization, Statistical Analysis, Machine Learning
-Backend: Node.js, Express.js, MongoDB, RESTful APIs, Database Design, Firebase, Django, Authentication, JWT
-AI/ML: Machine Learning, AI Integration, Data Processing, Model Deployment
-Tools: Git, VS Code, PyCharm, Figma, Docker, Linux, Firebase, Vercel, Azure, GitHub
-
-KEY PROJECTS
-• Multi-vendor E-commerce Platform (Next.js, MongoDB, TypeScript)
-• NovaChain DeFi Project (Solidity, React, Hardhat, Ethers.js)
-• House Price Prediction Kathmandu (Python, Machine Learning)
-• Blockchain Product List DApp (TypeScript, Solidity, React)
-• NFT Auction Platform (Solidity, Next.js, Web3.js, IPFS)
-
-ACHIEVEMENTS
-• 2+ years of development experience across multiple domains
-• Specialized in Web3 and DeFi application development
-• Experience with scalable e-commerce platform architecture
-• Data science projects with real-world business applications
-• Continuous learner adapting to emerging technologies
-`;
-
-    // Create and download the file
-    const blob = new Blob([resumeContent], { type: 'text/plain' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = 'Sugam_Adhikari_Resume.txt';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-
-    setTimeout(() => setDownloading(false), 2000);
+    setTimeout(() => setDownloading(false), 1000);
   };
 
-  const handleViewOnline = () => {
-    // In a real implementation, this would open a formatted resume view
-    alert('Online resume viewer would open here. For now, please use the download option.');
+  const handleViewOnline = async () => {
+    try {
+      // Check if file exists before trying to open
+      const response = await fetch('/resume.pdf', { method: 'HEAD' });
+      
+      if (!response.ok) {
+        throw new Error(`File not accessible (status: ${response.status})`);
+      }
+      
+      // Open the resume in a new tab
+      window.open('/resume.pdf', '_blank');
+      console.log('✅ PDF opened in new tab');
+    } catch (error) {
+      console.error('❌ View failed:', error);
+      alert(`Cannot open PDF: ${error.message}\n\nPlease check:\n1. File exists at /public/resume.pdf\n2. File is not corrupted\n3. Browser can display PDFs`);
+    }
   };
 
   const sections = [
@@ -154,20 +133,27 @@ ACHIEVEMENTS
         </div>
         <div className="ml-4 border-l-2 border-green-400/30 pl-4 space-y-3">
           <div className="text-gray-300 mb-4">Available resume operations:</div>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <button 
-              onClick={handleDownloadPDF}
-              disabled={downloading}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600/20 border border-green-400 text-green-400 rounded hover:bg-green-600/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {downloading ? 'Generating...' : 'Download Resume'}
-            </button>
-            <button 
-              onClick={handleViewOnline}
-              className="flex items-center gap-2 px-4 py-2 bg-cyan-600/20 border border-cyan-400 text-cyan-400 rounded hover:bg-cyan-600/30 transition-colors"
-            >
-              View Online
-            </button>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-green-400">▸</span>
+              <span 
+                onClick={handleDownloadPDF}
+                className="text-cyan-400 underline cursor-pointer hover:text-cyan-300 transition-colors select-none"
+              >
+                {downloading ? '[Downloading...]' : '[download-resume.pdf]'}
+              </span>
+              <span className="text-gray-500 text-xs">- Download PDF copy</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-green-400">▸</span>
+              <span 
+                onClick={handleViewOnline}
+                className="text-yellow-400 underline cursor-pointer hover:text-yellow-300 transition-colors select-none"
+              >
+                [view-online.pdf]
+              </span>
+              <span className="text-gray-500 text-xs">- Open in browser</span>
+            </div>
           </div>
         </div>
       </div>
@@ -214,7 +200,6 @@ ACHIEVEMENTS
         ))}
       </div>
 
-
       {/* Footer */}
       <div className="mt-8 pt-4 border-t border-green-400/30">
         <div className="space-y-2">
@@ -228,7 +213,6 @@ ACHIEVEMENTS
           </div>
         </div>
       </div>
-
     </div>
   );
 };
