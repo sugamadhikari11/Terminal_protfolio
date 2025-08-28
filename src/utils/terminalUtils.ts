@@ -29,22 +29,20 @@ export const generateBinary = (length: number = 100) => {
   return Array.from({length}, () => Math.round(Math.random())).join('');
 };
 
-export const getCommandDescription = (command: string): string => {
-  const commands: {[key: string]: string} = {
-    'help': 'Display a list of available commands',
-    'about': 'Learn about this portfolio',
-    'projects': 'Browse my projects',
-    'skills': 'See my technical skills',
-    'contact': 'Get in touch with me',
-    'resume': 'View or download my resume',
-    'clear': 'Clear the terminal screen',
-    'theme': 'Change the terminal theme',
-    'exit': 'Exit the terminal (not really)',
-  };
-  
-  return commands[command] || 'Unknown command';
-};
+export const terminalCommands = ['help', 'clear', 'about', 'projects', 'skills', 'contact', 'resume', 'exit', 'whoami', 'history'];
 
-export const terminalCommands = [
-  'help', 'about', 'projects', 'skills', 'contact', 'resume', 'clear', 'theme', 'exit'
-];
+export const getCommandDescription = (cmd: string) => {
+  const descriptions: { [key: string]: string } = {
+    'help': 'Show available commands',
+    'clear': 'Clear terminal screen',
+    'about': 'About me information',
+    'projects': 'View my projects',
+    'skills': 'Technical skills overview',
+    'contact': 'Contact information',
+    'resume': 'Download resume',
+    'exit': 'Exit terminal',
+    'whoami': 'Display current user',
+    'history': 'Show command history'
+  };
+  return descriptions[cmd] || 'Unknown command';
+};
