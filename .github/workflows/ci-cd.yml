@@ -78,8 +78,37 @@ jobs:
     # This job runs only after the Docker image is pushed
     needs: push-to-registry
     runs-on: ubuntu-latest
+    
+    # Ensure we have access to secrets
+    environment: production
 
     steps:
+      - name: Check for required secrets
+        run: |
+          if [ -z "${{ secrets.AZURE_VM_HOST }}" ]; then
+            echo "Error: AZURE_VM_HOST secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.AZURE_VM_USERNAME }}" ]; then
+            echo "Error: AZURE_VM_USERNAME secret is not set"
+            exit 1
+          fi
+          if [ -z "${{ secrets.AZURE_VM_SSH_KEY }}" ]; then
+            echo "Error: AZURE_VM_SSH_KEY secret is not set"
+            exit 1
+          fi
+          echo "All required secrets are set"
+
+    steps:
+      - name: Display public key fingerprint
+        run: |
+          echo "Using host: ${{ secrets.AZURE_VM_HOST }}"
+          echo "Using username: ${{ secrets.AZURE_VM_USERNAME }}"
+          # Don't echo the actual key, but show that we have it
+          if [ -n "${{ secrets.AZURE_VM_SSH_KEY }}" ]; then
+            echo "SSH key is present and has length: $(echo '${{ secrets.AZURE_VM_SSH_KEY }}' | wc -c) characters"
+          fi
+
       - name: Deploy to Azure VM via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -102,3 +131,35 @@ jobs:
 
             # Clean up old, unused Docker images to save space
             docker image prune -a -f
+        
+      # Fallback deployment method in case the SSH action fails
+      - name: Fallback - Setup SSH manually
+        if: failure()
+        run: |
+          echo "SSH action failed, trying manual approach"
+          # Create SSH key file
+          mkdir -p ~/.ssh
+          echo "${{ secrets.AZURE_VM_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          
+          # Set up known_hosts
+          ssh-keyscan -H ${{ secrets.AZURE_VM_HOST }} >> ~/.ssh/known_hosts
+          
+          # Run deployment commands
+          ssh -i ~/.ssh/deploy_key ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }} << 'EOF'
+            # Login to GitHub Container Registry
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull the latest image from the registry
+            docker pull ghcr.io/${{ github.repository }}:latest
+            
+            # Stop and remove the old container if it exists
+            docker stop terminal-portfolio || true
+            docker rm terminal-portfolio || true
+            
+            # Run the new container
+            docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${{ github.repository }}:latest
+            
+            # Clean up
+            docker image prune -a -f
+          EOF
