@@ -152,7 +152,7 @@ jobs:
             # Pull the latest image from the registry
             docker pull ghcr.io/${{ github.repository }}:latest
             
-            # Stop and remove the old container if it exists
+            # Stop and remove the old container if it exist
             docker stop terminal-portfolio || true
             docker rm terminal-portfolio || true
             
