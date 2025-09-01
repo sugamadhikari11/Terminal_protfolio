@@ -201,7 +201,8 @@ EOL'
             # Test and restart Nginx
             sudo nginx -t && sudo systemctl restart nginx
             
-            echo "Application deployed successfully!"            # Clean up old, unused Docker images to save space
+            echo "Application deployed successfully!"
+            # Clean up old, unused Docker images to save space
             sudo docker image prune -a -f
         
       # Fallback deployment method in case the SSH action fails
