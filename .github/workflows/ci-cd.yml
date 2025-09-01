@@ -59,7 +59,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/${{ github.repository_owner | lower }}/${{ github.event.repository.name | lower }}
           tags: |
             type=sha,format=long
             type=ref,event=branch
@@ -143,15 +143,16 @@ jobs:
             # Login to GitHub Container Registry
             echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Pull the latest image from the registry
-            sudo docker pull ghcr.io/${{ github.repository }}:latest
+            # Pull the latest image from the registry (using lowercase repository name)
+            REPO_LOWERCASE=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+            sudo docker pull ghcr.io/${REPO_LOWERCASE}:latest
 
             # Stop and remove the old container if it exists
             sudo docker stop terminal-portfolio || true
             sudo docker rm terminal-portfolio || true
 
             # Run the new container, mapping the host's port 80 to the container's port 80
-            sudo docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${{ github.repository }}:latest
+            sudo docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${REPO_LOWERCASE}:latest
 
             # Clean up old, unused Docker images to save space
             sudo docker image prune -a -f
@@ -191,15 +192,16 @@ jobs:
             # Login to GitHub Container Registry
             echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
-            # Pull the latest image from the registry
-            sudo docker pull ghcr.io/${{ github.repository }}:latest
+            # Pull the latest image from the registry (using lowercase repository name)
+            REPO_LOWERCASE=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+            sudo docker pull ghcr.io/${REPO_LOWERCASE}:latest
             
             # Stop and remove the old container if it exists
             sudo docker stop terminal-portfolio || true
             sudo docker rm terminal-portfolio || true
             
             # Run the new container
-            sudo docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${{ github.repository }}:latest
+            sudo docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${REPO_LOWERCASE}:latest
             
             # Clean up
             sudo docker image prune -a -f
