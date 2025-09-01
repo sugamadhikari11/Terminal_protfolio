@@ -115,21 +115,46 @@ jobs:
           username: ${{ secrets.AZURE_VM_USERNAME }}
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
           script: |
+            # Install Docker if not present
+            if ! command -v docker &> /dev/null; then
+              echo "Installing Docker..."
+              sudo apt-get update
+              sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+              sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+              sudo apt-get update
+              sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl enable docker
+              sudo systemctl start docker
+              sudo usermod -aG docker $USER
+              echo "Docker installation completed"
+            else
+              echo "Docker is already installed"
+            fi
+            
+            # Configure firewall to allow HTTP traffic
+            echo "Configuring firewall for web traffic..."
+            sudo apt-get install -y ufw
+            sudo ufw allow 22/tcp
+            sudo ufw allow 80/tcp
+            sudo ufw allow 443/tcp
+            sudo ufw --force enable || echo "Firewall already configured"
+            
             # Login to GitHub Container Registry
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             # Pull the latest image from the registry
-            docker pull ghcr.io/${{ github.repository }}:latest
+            sudo docker pull ghcr.io/${{ github.repository }}:latest
 
             # Stop and remove the old container if it exists
-            docker stop terminal-portfolio || true
-            docker rm terminal-portfolio || true
+            sudo docker stop terminal-portfolio || true
+            sudo docker rm terminal-portfolio || true
 
             # Run the new container, mapping the host's port 80 to the container's port 80
-            docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${{ github.repository }}:latest
+            sudo docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${{ github.repository }}:latest
 
             # Clean up old, unused Docker images to save space
-            docker image prune -a -f
+            sudo docker image prune -a -f
         
       # Fallback deployment method in case the SSH action fails
       - name: Fallback - Setup SSH manually
@@ -146,19 +171,36 @@ jobs:
           
           # Run deployment commands
           ssh -i ~/.ssh/deploy_key ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_HOST }} << 'EOF'
+            # Install Docker if not present
+            if ! command -v docker &> /dev/null; then
+              echo "Installing Docker..."
+              sudo apt-get update
+              sudo apt-get install -y apt-transport-https ca-certificates curl software-properties-common
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+              sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+              sudo apt-get update
+              sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+              sudo systemctl enable docker
+              sudo systemctl start docker
+              sudo usermod -aG docker $USER
+              echo "Docker installation completed"
+            else
+              echo "Docker is already installed"
+            fi
+            
             # Login to GitHub Container Registry
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo ${{ secrets.GITHUB_TOKEN }} | sudo docker login ghcr.io -u ${{ github.actor }} --password-stdin
             
             # Pull the latest image from the registry
-            docker pull ghcr.io/${{ github.repository }}:latest
+            sudo docker pull ghcr.io/${{ github.repository }}:latest
             
-            # Stop and remove the old container if it exist
-            docker stop terminal-portfolio || true
-            docker rm terminal-portfolio || true
+            # Stop and remove the old container if it exists
+            sudo docker stop terminal-portfolio || true
+            sudo docker rm terminal-portfolio || true
             
             # Run the new container
-            docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${{ github.repository }}:latest
+            sudo docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${{ github.repository }}:latest
             
             # Clean up
-            docker image prune -a -f
+            sudo docker image prune -a -f
           EOF
