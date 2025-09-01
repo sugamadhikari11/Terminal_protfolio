@@ -161,20 +161,47 @@ jobs:
             sudo ufw allow 443/tcp
             sudo ufw --force enable || echo "Firewall already configured"
             
-            # No login needed since the image will be public
+            # Since we're having issues with GitHub Container Registry, let's build directly on the VM
+            echo "Cloning repository directly on the VM..."
             
-            # Pull the latest image from the registry (using lowercase repository name)
-            REPO_LOWERCASE=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-            sudo docker pull ghcr.io/${REPO_LOWERCASE}:latest
-
-            # Stop and remove the old container if it exists
-            sudo docker stop terminal-portfolio || true
-            sudo docker rm terminal-portfolio || true
-
-            # Run the new container, mapping the host's port 80 to the container's port 80
-            sudo docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${REPO_LOWERCASE}:latest
-
-            # Clean up old, unused Docker images to save space
+            # Clone the repository on the server
+            rm -rf /tmp/terminal_portfolio || true
+            git clone https://github.com/sugamadhikari11/Terminal_protfolio.git /tmp/terminal_portfolio
+            cd /tmp/terminal_portfolio
+            
+            # Build the application
+            echo "Building the application..."
+            sudo apt-get install -y nodejs npm
+            npm install
+            npm run build
+            
+            # Deploy the built files
+            echo "Deploying the application..."
+            sudo mkdir -p /var/www/terminal-portfolio
+            sudo cp -r dist/* /var/www/terminal-portfolio/
+            
+            # Configure Nginx to serve the application
+            echo "Configuring Nginx..."
+            sudo bash -c 'cat > /etc/nginx/sites-available/default << EOL
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    
+    root /var/www/terminal-portfolio;
+    index index.html;
+    
+    server_name _;
+    
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+}
+EOL'
+            
+            # Test and restart Nginx
+            sudo nginx -t && sudo systemctl restart nginx
+            
+            echo "Application deployed successfully!"            # Clean up old, unused Docker images to save space
             sudo docker image prune -a -f
         
       # Fallback deployment method in case the SSH action fails
@@ -211,17 +238,45 @@ jobs:
             
             # No login needed since the image will be public
             
-            # Pull the latest image from the registry (using lowercase repository name)
-            REPO_LOWERCASE=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-            sudo docker pull ghcr.io/${REPO_LOWERCASE}:latest
+                        # Since we're having issues with GitHub Container Registry, let's build directly on the VM
+            echo "Cloning repository directly on the VM..."
             
-            # Stop and remove the old container if it exists
-            sudo docker stop terminal-portfolio || true
-            sudo docker rm terminal-portfolio || true
+            # Clone the repository on the server
+            rm -rf /tmp/terminal_portfolio || true
+            git clone https://github.com/sugamadhikari11/Terminal_protfolio.git /tmp/terminal_portfolio
+            cd /tmp/terminal_portfolio
             
-            # Run the new container
-            sudo docker run -d --restart always -p 80:80 --name terminal-portfolio ghcr.io/${REPO_LOWERCASE}:latest
+            # Build the application
+            echo "Building the application..."
+            sudo apt-get install -y nodejs npm
+            npm install
+            npm run build
             
-            # Clean up
-            sudo docker image prune -a -f
+            # Deploy the built files
+            echo "Deploying the application..."
+            sudo mkdir -p /var/www/terminal-portfolio
+            sudo cp -r dist/* /var/www/terminal-portfolio/
+            
+            # Configure Nginx to serve the application
+            echo "Configuring Nginx..."
+            sudo bash -c 'cat > /etc/nginx/sites-available/default << EOL
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    
+    root /var/www/terminal-portfolio;
+    index index.html;
+    
+    server_name _;
+    
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+}
+EOL'
+            
+            # Test and restart Nginx
+            sudo nginx -t && sudo systemctl restart nginx
+            
+            echo "Application deployed successfully!"
           EOF
