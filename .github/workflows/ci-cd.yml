@@ -99,7 +99,6 @@ jobs:
           fi
           echo "All required secrets are set"
 
-    steps:
       - name: Display public key fingerprint
         run: |
           echo "Using host: ${{ secrets.AZURE_VM_HOST }}"
