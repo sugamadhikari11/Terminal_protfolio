@@ -37,7 +37,7 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) =>
   // Focus input whenever prompt is shown and not processing
   useEffect(() => {
     focusInput();
-  }, [showPrompt, isProcessing]);
+  }, [showPrompt, isProcessing, focusInput]);
 
   // Handle clicks and typing like Linux terminal with proper text selection
   useEffect(() => {
@@ -116,7 +116,7 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) =>
       document.removeEventListener('keydown', handleGlobalKeyDown);
       document.removeEventListener('mousedown', handleMouseDown);
     };
-  }, [showPrompt, isProcessing]);
+  }, [showPrompt, isProcessing, focusInput]);
 
   useEffect(() => {
     const loadResources = async () => {
