@@ -27,15 +27,8 @@ jobs:
       - name: Build project
         run: npm run build
 
-      # Add linting and testing steps if you have them configured in package.json
-      # - name: Run linter
-      #   run: npm run lint --if-present
-      # - name: Run tests
-      #   run: npm run test --if-present
-
   deploy-to-azure:
     name: Deploy to Azure VM
-    # This job runs only on pushes to the master branch, not on pull requests
     if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     needs: build-and-test
     runs-on: ubuntu-latest
@@ -43,7 +36,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -55,75 +48,38 @@ jobs:
 
       - name: Build project
         run: npm run build
-        
-      - name: Deploy to Azure VM via SSH
+
+      - name: Copy Nginx config to server
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          source: "scripts/nginx.conf"
+          target: "/tmp/"
+          strip_components: 1
+
+      - name: Setup Nginx configuration
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.AZURE_VM_HOST }}
           username: ${{ secrets.AZURE_VM_USERNAME }}
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
           script: |
-            # Ensure the destination directory exists
+            set -e
             sudo mkdir -p /var/www/terminal-portfolio
-            
-            # Clean the directory first
-            sudo rm -rf /var/www/terminal-portfolio/*
-            
-            # Ensure Nginx is configured correctly (only needed once)
-            if [ ! -f /etc/nginx/sites-available/portfolio ]; then
-              sudo bash -c 'cat > /etc/nginx/sites-available/portfolio << EOL
-server {
-    listen 80 default_server;
-    listen [::]:80 default_server;
 
-    server_name sugamadhikari.com.np www.sugamadhikari.com.np;
-
-    root /var/www/terminal-portfolio;
-    index index.html;
-
-    # Disable all automatic redirects
-    absolute_redirect off;
-    port_in_redirect off;
-    server_name_in_redirect off;
-
-    # Security headers
-    add_header X-Content-Type-Options nosniff;
-    add_header X-Frame-Options DENY;
-    add_header X-XSS-Protection \"1; mode=block\";
-    add_header Referrer-Policy strict-origin-when-cross-origin;
-
-    # Direct root location to index.html without redirects
-    location = / {
-        add_header Cache-Control no-cache;
-        expires 0;
-        try_files /index.html =404;
-    }
-
-    # Handle static assets
-    location /assets/ {
-        add_header Cache-Control \"public, max-age=31536000\";
-        expires 365d;
-    }
-
-    # Handle all other paths for SPA routing
-    location / {
-        add_header Cache-Control no-cache;
-        expires 0;
-        try_files \$uri \$uri/index.html /index.html =404;
-    }
-
-    # Prevent access to hidden files
-    location ~ /\\. {
-        deny all;
-    }
-}
-EOL'
-              
+            if [ ! -f /etc/nginx/sites-available/portfolio ] || ! cmp -s /tmp/nginx.conf /etc/nginx/sites-available/portfolio; then
+              echo "Updating Nginx configuration..."
+              sudo cp /tmp/nginx.conf /etc/nginx/sites-available/portfolio
               sudo ln -sf /etc/nginx/sites-available/portfolio /etc/nginx/sites-enabled/
-              sudo rm -f /etc/nginx/sites-enabled/typing-tester /etc/nginx/sites-enabled/default
+              sudo rm -f /etc/nginx/sites-enabled/default
+              sudo nginx -t
               sudo systemctl reload nginx
+            else
+              echo "Nginx configuration is up to date"
             fi
-      
+
       - name: Copy build files to server
         uses: appleboy/scp-action@v0.1.4
         with:
@@ -133,7 +89,7 @@ EOL'
           source: "dist/*"
           target: "/tmp/terminal-portfolio-deploy"
           strip_components: 1
-      
+
       - name: Move files and set permissions
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -141,8 +97,13 @@ EOL'
           username: ${{ secrets.AZURE_VM_USERNAME }}
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
           script: |
+            set -e
+            echo "Copying files to web directory..."
+            sudo mkdir -p /var/www/terminal-portfolio
+            sudo rm -rf /var/www/terminal-portfolio/*
             sudo cp -r /tmp/terminal-portfolio-deploy/* /var/www/terminal-portfolio/
             sudo chown -R www-data:www-data /var/www/terminal-portfolio
             sudo chmod -R 755 /var/www/terminal-portfolio
             rm -rf /tmp/terminal-portfolio-deploy
             sudo systemctl reload nginx
+            echo "Deployment completed successfully!"
