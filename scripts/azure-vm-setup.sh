@@ -27,6 +27,19 @@ else
     echo "Docker is already installed."
 fi
 
+# Install and enable Nginx (CI/CD serves the built site from /var/www/terminal-portfolio)
+if ! command -v nginx &> /dev/null; then
+    echo "Installing Nginx..."
+    apt-get install -y nginx
+else
+    echo "Nginx is already installed."
+fi
+
+mkdir -p /var/www/terminal-portfolio
+chown -R www-data:www-data /var/www/terminal-portfolio
+systemctl enable nginx
+systemctl start nginx
+
 # Configure firewall to allow HTTP/HTTPS traffic
 echo "Configuring firewall..."
 apt-get install -y ufw
