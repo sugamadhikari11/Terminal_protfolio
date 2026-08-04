@@ -57,20 +57,11 @@ export const metadata: Metadata = {
     siteName: "Sugam Adhikari — SA Portfolio",
     title: TITLE,
     description: DESCRIPTION,
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Sugam Adhikari (SA) — full-stack, Web3, and data science portfolio",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: TITLE,
     description: DESCRIPTION,
-    images: ["/og-image.png"],
     creator: "@sugamadhikari",
   },
   robots: {
