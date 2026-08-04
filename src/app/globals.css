@@ -1,0 +1,711 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  :root {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 0%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
+
+    --secondary: 0 0% 80%;
+    --secondary-foreground: 0 0% 0%;
+
+    --muted: 0 0% 80%;
+    --muted-foreground: 0 0% 100%;
+
+    --accent: 0 0% 100%;
+    --accent-foreground: 0 0% 0%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 100%;
+    --input: 0 0% 100%;
+    --ring: 0 0% 100%;
+
+    --radius: 0.5rem;
+
+    /* Outer cube/page chrome — always black. Sky lives only inside GuiExperience. */
+    --gui-bg: #050805;
+    --gui-sky: #c4dff2;
+  }
+
+  body {
+    @apply bg-background text-foreground font-mono;
+    font-family: 'JetBrains Mono', monospace;
+    margin: 0;
+    padding: 0;
+    /* Cube/terminal mode: lock page; GUI flat unlocks below */
+    overflow: hidden;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Fullscreen GUI needs document scroll */
+  html:has(.cube-scene--gui-flat),
+  body:has(.cube-scene--gui-flat) {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
+  }
+
+  *::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+  }
+}
+
+@layer components {
+
+  .terminal-container {
+    @apply relative bg-background text-foreground p-4 overflow-hidden;
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.1);
+  }
+
+  .terminal-border {
+    @apply relative border border-white/40 bg-background;
+  }
+
+  .terminal-text {
+    @apply text-terminal-text;
+  }
+
+  .success-text {
+    @apply text-terminal-success;
+  }
+
+  .error-text {
+    @apply text-terminal-error;
+  }
+
+  .prompt-text {
+    @apply text-terminal-prompt;
+  }
+
+  .command-text {
+    @apply text-terminal-command;
+  }
+
+  .binary {
+    @apply text-xs opacity-30 overflow-hidden;
+    user-select: none;
+  }
+
+  .morse {
+    @apply text-xs opacity-30;
+    letter-spacing: 3px;
+    user-select: none;
+  }
+
+  .cursor::after {
+    content: "▋";
+    @apply animate-cursor-blink;
+  }
+
+  .typewriter {
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0 auto;
+    @apply animate-typewriter;
+  }
+
+  .connecting::after {
+    @apply animate-connecting;
+  }
+
+  .loading-bar {
+    @apply h-1 bg-white/20 rounded-full overflow-hidden;
+    width: 100%;
+  }
+
+  .loading-progress {
+    @apply h-full bg-white animate-loading-progress;
+  }
+
+  .keyboard {
+    @apply grid grid-cols-14 gap-1 text-xs text-center opacity-40;
+  }
+
+  .key {
+    @apply border border-white/30 rounded p-1;
+  }
+
+  /* Auto scroll-related styles */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+  }
+}
+
+/* ─── Terminal window cube (original 90vh height, thick sides) ─── */
+.cube-scene {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100dvh;
+  overflow: hidden;
+  background: #000;
+  perspective: 1600px;
+  perspective-origin: 50% 48%;
+}
+
+.cube-scene--booting {
+  pointer-events: none;
+}
+
+.cube-scene--spinning {
+  background: radial-gradient(ellipse at center, #0a1f16 0%, #000 72%);
+}
+
+/* When GUI face is up, letterbox stays black — sky is only inside the face */
+.cube-scene--gui-tone {
+  background: #000 !important;
+}
+
+/*
+ * Expand + collapse: outer scene stays black; only the box face shows GUI.
+ */
+.cube-scene--morphing {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  perspective: none !important;
+  background: #000 !important;
+}
+
+.cube-scene--morphing .cube-stage {
+  transform: none !important;
+  transform-style: flat;
+  overflow: hidden;
+  background: var(--gui-sky, #c4dff2);
+  will-change: width, height;
+}
+
+.cube-scene--morphing .cube-box {
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+  transform-style: flat;
+  background: var(--gui-sky, #c4dff2);
+}
+
+.cube-scene--morphing .cube-face--front,
+.cube-scene--morphing .cube-face--side {
+  display: none !important;
+}
+
+.cube-scene--morphing .cube-face--back {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  margin: 0 !important;
+  transform: none !important;
+  backface-visibility: visible !important;
+  -webkit-backface-visibility: visible !important;
+  overflow: hidden !important;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  /* Transparent so the live GUI preview shows through (not a blank fill) */
+  background: transparent !important;
+}
+
+.cube-scene--morphing .gui-portfolio {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  background: var(--gui-bg) !important;
+}
+
+.cube-scene--gui-flat {
+  display: block;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  perspective: none !important;
+  background: #000 !important;
+}
+
+.cube-scene--gui-flat .cube-stage,
+.cube-scene--gui-flat .cube-box {
+  position: relative;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100dvh !important;
+  transform: none !important;
+  transform-style: flat;
+  background: transparent;
+}
+
+.cube-scene--gui-flat .cube-face--front {
+  display: none !important;
+}
+
+.cube-scene--gui-flat .cube-face--back {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100dvh !important;
+  margin: 0 !important;
+  transform: none !important;
+  backface-visibility: visible !important;
+  -webkit-backface-visibility: visible !important;
+  overflow: hidden !important;
+  border: none !important;
+  background: transparent !important;
+}
+
+/* While morphing, sky stays inside the growing box; page letterbox is black */
+.cube-scene--morphing .gui-experience {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Fullscreen overlay after zoom */
+.cube-scene--gui-flat .gui-experience {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100dvh;
+  min-height: 100dvh;
+  z-index: 30;
+}
+
+/* Crash rush — soft edge wash only (kept light for performance) */
+body.gui-flight-rush .gui-experience::after {
+  content: "";
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 45%,
+    rgba(255, 255, 255, 0.22) 100%
+  );
+  animation: gui-rush-streak 1.1s ease-in forwards;
+}
+
+@keyframes gui-rush-streak {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 3D GUI owns scrolling — don't unlock document scroll under the canvas */
+html:has(.gui-experience),
+body:has(.gui-experience) {
+  overflow: hidden !important;
+  height: 100%;
+}
+
+/* Stage handles camera push/scale so the cube itself stays truly 3D */
+.cube-stage {
+  position: relative;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.cube-box {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transform-origin: 50% 50%;
+}
+
+/*
+ * preserve-3d breaks overflow scrolling in Chromium.
+ * At rest, flatten the stage/box so terminal/GUI can scroll; spin keeps 3D.
+ */
+.cube-stage:not(.cube-stage--3d),
+.cube-stage:not(.cube-stage--3d) .cube-box {
+  transform-style: flat !important;
+}
+
+.terminal-scroll {
+  overflow-y: scroll !important;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+
+.cube-face {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--cube-w, 960px);
+  height: var(--cube-h, 720px);
+  margin-left: calc(var(--cube-w, 960px) / -2);
+  margin-top: calc(var(--cube-h, 720px) / -2);
+  overflow: hidden;
+  background: #000;
+  box-sizing: border-box;
+}
+
+.cube-face--front,
+.cube-face--back {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.cube-face--front {
+  background: #000;
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  /* Flex children need a definite box; scroll lives in .terminal-scroll */
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+}
+
+.cube-face--front > * {
+  flex: 1 1 auto;
+  min-height: 0;
+  height: 100%;
+}
+
+.cube-face--back {
+  /* Sky only as fallback; live/preview GUI paints on top */
+  background: var(--gui-sky, #c4dff2);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  overflow: hidden !important;
+}
+
+.cube-face--right,
+.cube-face--left {
+  display: grid;
+  place-items: center;
+  margin-left: calc(var(--cube-depth, 720px) / -2);
+  margin-top: calc(var(--cube-h, 720px) / -2);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background:
+    linear-gradient(90deg, #011f18 0%, #065f46 45%, #022c22 100%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(16, 185, 129, 0.2) 0 2px,
+      transparent 2px 22px
+    );
+  border: 1px solid rgba(52, 211, 153, 0.55);
+  box-shadow: inset 0 0 40px rgba(16, 185, 129, 0.12);
+}
+
+.cube-face--right span,
+.cube-face--left span {
+  font-family: "JetBrains Mono", monospace;
+  font-size: clamp(1rem, 2.2vw, 1.6rem);
+  letter-spacing: 0.5em;
+  color: rgba(110, 231, 183, 0.75);
+  text-shadow: 0 0 20px rgba(34, 197, 94, 0.5);
+  transform: rotate(90deg);
+  user-select: none;
+}
+
+.cube-face--left span {
+  transform: rotate(-90deg);
+}
+
+.cube-face--top,
+.cube-face--bottom {
+  margin-left: calc(var(--cube-w, 960px) / -2);
+  margin-top: calc(var(--cube-depth, 720px) / -2);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: linear-gradient(90deg, #02140e 0%, #14532d 50%, #02140e 100%);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+}
+
+.mode-switch {
+  position: fixed;
+  z-index: 50;
+  top: 1.25rem;
+  right: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.15rem;
+  padding: 0.65rem 1rem;
+  border: 1px solid rgba(34, 197, 94, 0.55);
+  background: rgba(0, 0, 0, 0.75);
+  color: #4ade80;
+  font-family: "JetBrains Mono", monospace;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease,
+    color 0.25s ease,
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+  box-shadow: 0 0 24px rgba(34, 197, 94, 0.12);
+  animation: mode-switch-pulse 2.8s ease-in-out infinite;
+}
+
+.mode-switch:hover:not(:disabled) {
+  border-color: rgba(74, 222, 128, 0.95);
+  background: rgba(6, 40, 20, 0.9);
+  transform: translateY(-1px);
+  box-shadow: 0 0 32px rgba(34, 197, 94, 0.28);
+  animation: none;
+}
+
+/* Sky GUI theme — soft gray-blue cloud (not flat white / not a speech bubble) */
+.mode-switch--sky {
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  border: none;
+  background: transparent;
+  color: #0d2138;
+  padding: 1.15rem 1.85rem 1.05rem;
+  min-width: 9rem;
+  box-shadow: none;
+  animation: none;
+  filter: drop-shadow(0 8px 14px rgba(13, 33, 56, 0.16));
+  overflow: visible;
+}
+
+.mode-switch--sky:hover:not(:disabled) {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+  transform: translateY(-2px) scale(1.03);
+  filter: drop-shadow(0 12px 20px rgba(13, 33, 56, 0.2));
+}
+
+.mode-switch__cloud {
+  position: absolute;
+  inset: -32% -18% -38% -18%;
+  width: auto;
+  height: auto;
+  /* Storm-soft cloud gray-blue — a touch darker than white */
+  color: #9eb6cb;
+  pointer-events: none;
+  z-index: 0;
+  transition: color 0.25s ease;
+  opacity: 0.95;
+}
+
+.mode-switch--sky:hover:not(:disabled) .mode-switch__cloud {
+  color: #8eabc4;
+}
+
+.mode-switch__copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.mode-switch--sky .mode-switch__label {
+  letter-spacing: 0.18em;
+}
+
+.mode-switch--sky .mode-switch__hint {
+  color: rgba(13, 33, 56, 0.5);
+}
+
+.mode-switch:disabled {
+  opacity: 0.65;
+  cursor: wait;
+}
+
+.mode-switch__label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.mode-switch__hint {
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: rgba(163, 230, 53, 0.55);
+}
+
+@keyframes mode-switch-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 16px rgba(34, 197, 94, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 28px rgba(34, 197, 94, 0.35);
+  }
+}
+
+/*
+ * Same glow in the cube face and fullscreen:
+ * - pixel-sized ellipses (not % of the box — % made fullscreen look lighter)
+ * - scroll attachment (fixed breaks under cube 3D transforms)
+ * - parents use solid --gui-bg only so glow isn't double-stacked
+ */
+.gui-atmosphere {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-color: var(--gui-bg);
+  background-image:
+    radial-gradient(
+      ellipse 900px 520px at 160px 100px,
+      rgba(16, 185, 129, 0.15),
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 700px 400px at 1100px 140px,
+      rgba(6, 95, 70, 0.12),
+      transparent 68%
+    );
+  background-repeat: no-repeat;
+  background-attachment: scroll;
+}
+
+.gui-atmosphere::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(180deg, black 0%, transparent 85%);
+}
+
+.gui-reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: gui-rise 0.85s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.gui-reveal-delay-1 {
+  animation-delay: 0.12s;
+}
+.gui-reveal-delay-2 {
+  animation-delay: 0.24s;
+}
+.gui-reveal-delay-3 {
+  animation-delay: 0.36s;
+}
+.gui-reveal-delay-4 {
+  animation-delay: 0.48s;
+}
+
+@keyframes gui-rise {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gui-portfolio a:focus-visible,
+.mode-switch:focus-visible {
+  outline: 2px solid #4ade80;
+  outline-offset: 3px;
+}
+
+@media (max-width: 767px) {
+  /* Compact top-right chip — no stretched cloud blob */
+  .mode-switch,
+  .mode-switch.mode-switch--sky {
+    top: max(0.65rem, env(safe-area-inset-top)) !important;
+    bottom: auto !important;
+    right: max(0.6rem, env(safe-area-inset-right)) !important;
+    left: auto !important;
+    height: auto !important;
+    width: fit-content !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    min-height: 0 !important;
+    padding: 0.42rem 0.72rem !important;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    border: 1px solid rgba(13, 33, 56, 0.18) !important;
+    background: rgba(255, 255, 255, 0.72) !important;
+    color: #0d2138 !important;
+    box-shadow: 0 4px 14px rgba(13, 33, 56, 0.12) !important;
+    filter: none !important;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    overflow: hidden;
+    animation: none !important;
+  }
+
+  .mode-switch--sky:hover:not(:disabled) {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.88) !important;
+    filter: none !important;
+  }
+
+  .mode-switch__cloud {
+    display: none !important;
+  }
+
+  .mode-switch__hint {
+    display: none !important;
+  }
+
+  .mode-switch__label {
+    font-size: 0.62rem !important;
+    letter-spacing: 0.14em !important;
+  }
+
+  .mode-switch__copy {
+    gap: 0;
+  }
+
+  .cube-face--right span,
+  .cube-face--left span {
+    font-size: clamp(1.1rem, 5vw, 1.6rem);
+    letter-spacing: 0.28em;
+  }
+
+  .terminal-scroll {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@media (max-width: 380px) {
+  .mode-switch,
+  .mode-switch.mode-switch--sky {
+    padding: 0.38rem 0.62rem !important;
+  }
+
+  .mode-switch__label {
+    font-size: 0.58rem !important;
+  }
+}

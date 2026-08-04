@@ -24,7 +24,7 @@ const Skills: React.FC = () => {
     {
       name: "Frontend Development",
       command: "ls -la ~/skills/frontend/",
-      skills: ["React.js", "Next.js", "TypeScript", "Tailwind CSS", "HTML5", "CSS3", "Responsive Design"]
+      skills: ["React.js", "Next.js", "TypeScript", "3D Web", "Tailwind CSS", "HTML5", "CSS3", "Responsive Design"]
     },
     {
       name: "Blockchain & Web3",
@@ -32,24 +32,24 @@ const Skills: React.FC = () => {
       skills: ["Solidity", "Web3.js", "ethers.js", "Smart Contracts", "DApps", "MetaMask Integration", "NFT Development"]
     },
     {
-      name: "Data Science & Analytics",
-      command: "python -m pip list | grep data",
-      skills: ["Python", "R", "Power BI", "Data Visualization", "Statistical Analysis", "Machine Learning"]
+      name: "AI, Agents & Data",
+      command: "python -m pip list | grep -E 'ai|ml'",
+      skills: ["AI Integrations", "MCP Integration", "Machine Learning", "Python", "R", "Power BI", "Visualization"]
     },
     {
       name: "Backend Development",
       command: "ps aux | grep server",
-      skills: ["Node.js", "Express.js", "MongoDB", "RESTful APIs", "Database Design", "FireBase", "Django", "Authentication", "JWT"]
+      skills: ["Node.js", "PHP", "Django", "Express.js", "MongoDB", "Social Integration", "Firebase", "JWT"]
     },
     {
-      name: "AI/ML & Automation",
-      command: "conda list | grep ml",
-      skills: ["Machine Learning", "AI Integration", "Data Processing", "Model Deployment"]
+      name: "DevOps & Cloud",
+      command: "which --all devops",
+      skills: ["CI/CD", "Azure", "AWS", "Docker", "cPanel", "Linux", "Git", "GitHub"]
     },
     {
-      name: "Tools & Technologies",
-      command: "which --all",
-      skills: ["Git", "VS Code", "PyCharm", "Figma", "Docker", "Linux", "Firebase", "Vercel", "Azure", "GitHub"]
+      name: "Tools",
+      command: "ls ~/tools/",
+      skills: ["VS Code", "PyCharm", "Figma", "Vercel", "Hardhat"]
     }
   ];
 

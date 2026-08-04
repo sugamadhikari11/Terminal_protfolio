@@ -1,119 +1,54 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 
-// Enhanced TerminalBorder with realistic cracks
 interface TerminalBorderProps {
   children: React.ReactNode;
   isLoading: boolean;
 }
 
-const TerminalBorder: React.FC<TerminalBorderProps> = ({ children, isLoading }) => {
-  const [cracks, setCracks] = useState<Array<{ 
-    x: number; 
-    y: number; 
-    length: number; 
-    angle: number; 
-    branches: Array<{ angle: number; length: number }>;
-  }>>([]);
+const TerminalBorder: React.FC<TerminalBorderProps> = ({ children }) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Auto-scroll only while the user is already near the bottom (don't fight manual scroll)
   useEffect(() => {
-    if (!isLoading) {
-      // Generate realistic crack patterns
-      const newCracks = Array.from({ length: 3 }, (_, i) => {
-        const x = 10 + Math.random() * 80;
-        const y = 10 + Math.random() * 80;
-        const mainLength = 50 + Math.random() * 100;
-        const angle = Math.random() * 360;
-        
-        // Generate branches for more realistic cracks
-        const branches = Array.from({ length: 2 + Math.floor(Math.random() * 3) }, () => ({
-          angle: angle + (Math.random() - 0.5) * 90,
-          length: mainLength * (0.3 + Math.random() * 0.4)
-        }));
+    const scrollElement = contentRef.current;
+    if (!scrollElement) return;
 
-        return { x, y, length: mainLength, angle, branches };
+    const isNearBottom = () =>
+      scrollElement.scrollHeight - scrollElement.scrollTop - scrollElement.clientHeight < 80;
+
+    const scrollToBottom = () => {
+      requestAnimationFrame(() => {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
       });
-      setCracks(newCracks);
-    }
-  }, [isLoading]);
+    };
 
-  // Enhanced auto-scrolling
-  useEffect(() => {
-    if (contentRef.current) {
-      const scrollElement = contentRef.current;
-      
-      const scrollToBottom = () => {
-        requestAnimationFrame(() => {
-          if (scrollElement) {
-            scrollElement.scrollTop = scrollElement.scrollHeight;
-          }
-        });
-      };
+    scrollToBottom();
 
-      scrollToBottom();
+    const observer = new MutationObserver(() => {
+      if (isNearBottom()) scrollToBottom();
+    });
 
-      const observer = new MutationObserver(() => {
-        scrollToBottom();
-      });
+    observer.observe(scrollElement, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
 
-      observer.observe(scrollElement, {
-        childList: true,
-        subtree: true,
-        characterData: true
-      });
-
-      return () => observer.disconnect();
-    }
+    return () => observer.disconnect();
   }, []);
 
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black p-4">
-      <div className="relative w-full max-w-6xl h-[90vh] border border-green-500/40 bg-black shadow-lg shadow-green-500/20">
-        {/* Realistic crack overlay */}
-        <svg 
-          className="absolute inset-0 w-full h-full pointer-events-none"
-          style={{ 
-            opacity: isLoading ? 0 : 0.4,
-            transition: 'opacity 2s ease-in-out'
-          }}
-        >
-          {cracks.map((crack, index) => (
-            <g key={index}>
-              {/* Main crack line */}
-              <line
-                x1={`${crack.x}%`}
-                y1={`${crack.y}%`}
-                x2={`${crack.x + Math.cos(crack.angle * Math.PI / 180) * crack.length / 10}%`}
-                y2={`${crack.y + Math.sin(crack.angle * Math.PI / 180) * crack.length / 10}%`}
-                stroke="rgba(255,255,255,0.3)"
-                strokeWidth="1"
-                style={{
-                  filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.5))',
-                  animation: `crackGlow 3s ease-in-out infinite alternate`
-                }}
-              />
-              {/* Crack branches */}
-              {crack.branches.map((branch, branchIndex) => (
-                <line
-                  key={branchIndex}
-                  x1={`${crack.x + Math.cos(crack.angle * Math.PI / 180) * crack.length / 20}%`}
-                  y1={`${crack.y + Math.sin(crack.angle * Math.PI / 180) * crack.length / 20}%`}
-                  x2={`${crack.x + Math.cos(branch.angle * Math.PI / 180) * branch.length / 15}%`}
-                  y2={`${crack.y + Math.sin(branch.angle * Math.PI / 180) * branch.length / 15}%`}
-                  stroke="rgba(255,255,255,0.2)"
-                  strokeWidth="0.5"
-                />
-              ))}
-            </g>
-          ))}
-        </svg>
-
+    <div className="flex h-full min-h-0 w-full flex-col bg-black p-2 md:p-3">
+      <div className="relative flex h-full min-h-0 w-full flex-col overflow-hidden border border-green-500/40 bg-black shadow-lg shadow-green-500/20">
         <div
           ref={contentRef}
-          className="absolute inset-[2px] bg-black overflow-auto scroll-smooth p-4"
+          className="terminal-scroll relative z-0 min-h-0 flex-1 overflow-y-scroll overflow-x-hidden bg-black p-3 text-[13px] leading-relaxed sm:text-sm md:p-5"
           style={{
-            scrollbarWidth: 'thin',
-            scrollbarColor: '#22c55e transparent'
+            scrollbarWidth: "thin",
+            scrollbarColor: "#22c55e transparent",
+            overscrollBehavior: "contain",
+            WebkitOverflowScrolling: "touch",
+            touchAction: "pan-y",
           }}
         >
           {children}
@@ -121,20 +56,15 @@ const TerminalBorder: React.FC<TerminalBorderProps> = ({ children, isLoading }) 
       </div>
 
       <style>{`
-        @keyframes crackGlow {
-          0% { opacity: 0.3; }
-          100% { opacity: 0.7; }
-        }
-        
-        div::-webkit-scrollbar {
+        .terminal-scroll::-webkit-scrollbar {
           width: 8px;
         }
-        
-        div::-webkit-scrollbar-track {
+
+        .terminal-scroll::-webkit-scrollbar-track {
           background: transparent;
         }
-        
-        div::-webkit-scrollbar-thumb {
+
+        .terminal-scroll::-webkit-scrollbar-thumb {
           background-color: #22c55e;
           border-radius: 4px;
         }

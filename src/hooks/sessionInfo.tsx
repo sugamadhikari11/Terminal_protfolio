@@ -1,52 +1,43 @@
-import React, { useState, useEffect } from 'react';
+"use client";
 
-// Utility functions
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+import React, { useState, useEffect, useRef } from "react";
 
-// Session Info Component
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 interface SessionInfoProps {
   onComplete: () => void;
 }
 
 const SessionInfo: React.FC<SessionInfoProps> = ({ onComplete }) => {
   const [showInfo, setShowInfo] = useState(false);
+  const [stamp, setStamp] = useState("");
+  const doneRef = useRef(false);
 
   useEffect(() => {
-    const initializeSession = async () => {
-      await sleep(400);
+    let cancelled = false;
+    const run = async () => {
+      await sleep(300);
+      if (cancelled) return;
+      setStamp(new Date().toLocaleString());
       setShowInfo(true);
-      await sleep(800);
+      await sleep(600);
+      if (cancelled || doneRef.current) return;
+      doneRef.current = true;
       onComplete();
     };
+    void run();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-    initializeSession();
-  }, [onComplete]);
+  if (!showInfo) return null;
 
   return (
-    <div className="my-4">
-      {showInfo && (
-        <div className="opacity-0 animate-fadeIn" style={{ animationFillMode: 'forwards' }}>
-          <div className="text-gray-400 text-sm">
-            Session started: {new Date().toLocaleString()}
-          </div>
-          <div className="text-gray-400 text-sm">
-            Terminal ready for commands...
-          </div>
-        </div>
-      )}
-      
-      <style>
-        {`
-          @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          
-          .animate-fadeIn {
-            animation: fadeIn 1s ease-in-out;
-          }
-        `}
-      </style>
+    <div className="my-4 text-sm text-gray-400">
+      <div>Session started: {stamp}</div>
+      <div>Terminal ready for commands...</div>
     </div>
   );
 };

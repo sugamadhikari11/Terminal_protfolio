@@ -1,13 +1,14 @@
+/** @type {import('tailwindcss').Config} */
 import type { Config } from "tailwindcss";
 import animate from "tailwindcss-animate";
 
 export default {
 	darkMode: "class",
 	content: [
-		"./pages/**/*.{ts,tsx}",
-		"./components/**/*.{ts,tsx}",
-		"./app/**/*.{ts,tsx}",
-		"./src/**/*.{ts,tsx}",
+		"./src/app/**/*.{ts,tsx}",
+		"./src/components/**/*.{ts,tsx}",
+		"./src/hooks/**/*.{ts,tsx}",
+		"./src/pages/**/*.{ts,tsx}",
 	],
 	prefix: "",
 	theme: {

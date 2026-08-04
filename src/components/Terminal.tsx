@@ -1,83 +1,75 @@
-import React, { useState, useEffect } from 'react';
-import TerminalBorder from './TerminalBorder';
-import SessionInfo from '../hooks/sessionInfo';
-import TerminalContent from './TerminalContent';
-import { useTypewriter } from '../hooks/typeWriter';
-import { sleep } from '../utils/terminalUtils';
+"use client";
 
-// Main Terminal Component
+import React, { useState, useEffect, useCallback } from "react";
+import TerminalBorder from "./TerminalBorder";
+import SessionInfo from "../hooks/sessionInfo";
+import TerminalContent from "./TerminalContent";
+import { useTypewriter } from "../hooks/typeWriter";
+import { sleep } from "../utils/terminalUtils";
+
 const Terminal: React.FC = () => {
   const [connecting, setConnecting] = useState(true);
-  const [showConnecting, setShowConnecting] = useState(false);
   const [showSSH, setShowSSH] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const { displayText: sshText } = useTypewriter(
-    "ssh guest@terminal.portfolio",
-    60,
-    showSSH ? 0 : 0
+    showSSH ? "ssh guest@terminal.portfolio" : "",
+    40,
+    0
   );
 
   useEffect(() => {
+    let cancelled = false;
     const initialize = async () => {
-      await sleep(200);
-      setShowConnecting(true);
-      await sleep(300);
+      await sleep(400);
+      if (cancelled) return;
       setShowSSH(true);
-      await sleep(600);
+      await sleep(1000);
+      if (cancelled) return;
       setConnecting(false);
     };
-    initialize();
+    void initialize();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const handleAuthentication = () => {
+  const handleAuthentication = useCallback(() => {
     setIsAuthenticated(true);
-  };
+  }, []);
 
   return (
     <TerminalBorder isLoading={connecting}>
-      <div className="font-mono text-green-400">
-        {showConnecting && (
-          <div className="mb-4 opacity-0 animate-fadeIn" style={{ animationFillMode: 'forwards' }}>
-            <div className="flex items-center text-yellow-400 mb-2">
-              <div className="mr-2">[{connecting ? '●' : '✓'}]</div>
-              <div>Establishing secure connection...</div>
-              {connecting && (
-                <div className="ml-2">
-                  <span className="animate-pulse">⣾⣽⣻⢿⡿⣟⣯⣷</span>
-                </div>
-              )}
-            </div>
+      <div className="font-mono text-sm text-green-400">
+        <div className="mb-4">
+          <div className="mb-2 flex items-center text-yellow-400">
+            <span className="mr-2">[{connecting ? "●" : "✓"}]</span>
+            <span>Establishing secure connection...</span>
             {connecting && (
-              <div className="w-full bg-gray-800 rounded-full h-2">
-                <div className="bg-green-500 h-2 rounded-full animate-pulse" style={{ width: '100%' }}></div>
-              </div>
+              <span className="ml-2 animate-pulse">⣾⣽⣻⢿⡿⣟⣯⣷</span>
             )}
           </div>
-        )}
-        
-        {showSSH && !connecting && (
-          <div className="mb-2 opacity-0 animate-fadeIn" style={{ animationDelay: '0.3s', animationFillMode: 'forwards' }}>
+          {connecting && (
+            <div className="h-2 w-full rounded-full bg-gray-800">
+              <div
+                className="h-2 animate-pulse rounded-full bg-green-500"
+                style={{ width: "100%" }}
+              />
+            </div>
+          )}
+        </div>
+
+        {showSSH && (
+          <div className="mb-2">
             <span className="text-white">user@localhost:~$ </span>
             <span className="text-cyan-400">{sshText}</span>
             <span className="animate-pulse text-green-400">|</span>
           </div>
         )}
-        
+
         {!connecting && <SessionInfo onComplete={handleAuthentication} />}
         <TerminalContent isAuthenticated={isAuthenticated} />
       </div>
-      
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        
-        .animate-fadeIn {
-          animation: fadeIn 1s ease-in-out;
-        }
-      `}</style>
     </TerminalBorder>
   );
 };

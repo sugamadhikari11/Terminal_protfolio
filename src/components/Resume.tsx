@@ -53,7 +53,8 @@ const Resume: React.FC = () => {
       console.log(`✅ PDF downloaded successfully (${blob.size} bytes)`);
     } catch (error) {
       console.error('❌ Download failed:', error);
-      alert(`Download failed: ${error.message}\n\nPlease check:\n1. File exists at /public/resume.pdf\n2. File is not corrupted\n3. File has proper permissions`);
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`Download failed: ${message}\n\nPlease check:\n1. File exists at /public/resume.pdf\n2. File is not corrupted\n3. File has proper permissions`);
     }
 
     setTimeout(() => setDownloading(false), 1000);
@@ -73,7 +74,8 @@ const Resume: React.FC = () => {
       console.log('✅ PDF opened in new tab');
     } catch (error) {
       console.error('❌ View failed:', error);
-      alert(`Cannot open PDF: ${error.message}\n\nPlease check:\n1. File exists at /public/resume.pdf\n2. File is not corrupted\n3. Browser can display PDFs`);
+      const message = error instanceof Error ? error.message : String(error);
+      alert(`Cannot open PDF: ${message}\n\nPlease check:\n1. File exists at /public/resume.pdf\n2. File is not corrupted\n3. Browser can display PDFs`);
     }
   };
 

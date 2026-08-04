@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useRef, KeyboardEvent } from 'react';
-import { sleep, generateBinary, generatePandaAscii, terminalCommands, getCommandDescription } from '../utils/terminalUtils';
+import React, { useState, useEffect, useRef, KeyboardEvent, useCallback, lazy, Suspense } from 'react';
+import { sleep, generateBinary, terminalCommands, getCommandDescription } from '../utils/terminalUtils';
 import { useTypewriter } from '../hooks/typeWriter';
-import { Projects, Skills, Contact, Resume, Theme, AboutMe, Exit } from './index';
+import { Projects, Skills, Contact, Resume, AboutMe, Exit } from './index';
+
+const PandaIntro = lazy(() => import('./PandaIntro'));
 
 // Enhanced Terminal Content
 interface TerminalContentProps {
@@ -16,128 +18,109 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) =>
   const [currentCommand, setCurrentCommand] = useState('');
   const [commandHistory, setCommandHistory] = useState<string[]>([]);
   const [historyIndex, setHistoryIndex] = useState(-1);
-  const [commandOutput, setCommandOutput] = useState<JSX.Element[]>([]);
+  const [commandOutput, setCommandOutput] = useState<React.ReactElement[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const commandInputRef = useRef<HTMLInputElement>(null);
   const terminalRef = useRef<HTMLDivElement>(null);
 
   const { displayText: welcomeText } = useTypewriter(
     "Welcome to my interactive terminal portfolio! Type 'help' to see available commands. Happy exploring, fellow developer!",
-    30,
+    16,
     showWelcome ? 0 : 0
   );
 
-  // Function to focus input
-  const focusInput = () => {
+  const focusInput = useCallback(() => {
     if (commandInputRef.current && !isProcessing && showPrompt) {
       commandInputRef.current.focus();
     }
-  };
+  }, [isProcessing, showPrompt]);
 
-  // Focus input whenever prompt is shown and not processing
   useEffect(() => {
     focusInput();
   }, [showPrompt, isProcessing, focusInput]);
 
-  // Handle clicks and typing like Linux terminal with proper text selection
+  const onPandaComplete = useCallback(() => {
+    setShowWelcome(true);
+    window.setTimeout(() => setShowPrompt(true), 850);
+  }, []);
+
+  useEffect(() => {
+    const loadResources = async () => {
+      if (!isAuthenticated) return;
+
+      setShowBinary(true);
+      await sleep(200);
+      setShowPanda(true);
+    };
+
+    if (isAuthenticated) {
+      loadResources();
+    }
+  }, [isAuthenticated]);
+
   useEffect(() => {
     const handleTerminalClick = (e: MouseEvent) => {
-      // Don't interfere with clicks on buttons, links, or interactive elements
       const target = e.target as HTMLElement;
-      if (target.tagName === 'BUTTON' || 
-          target.tagName === 'A' || 
-          target.tagName === 'INPUT' ||
-          target.closest('button, a, input, textarea')) {
+      if (
+        target.tagName === "BUTTON" ||
+        target.tagName === "A" ||
+        target.tagName === "INPUT" ||
+        target.closest("button, a, input, textarea")
+      ) {
         return;
       }
 
-      // Only handle clicks within the terminal area
       if (terminalRef.current?.contains(target)) {
-        // Small delay to check if this was a text selection action
         setTimeout(() => {
-          // If user has selected text, don't focus input
-          if (window.getSelection()?.toString().length) {
-            return;
-          }
-          // Otherwise focus input like Linux terminal
+          if (window.getSelection()?.toString().length) return;
           focusInput();
         }, 10);
       }
     };
 
-    // Handle global keydown - capture typing like Linux terminal
     const handleGlobalKeyDown = (e: globalThis.KeyboardEvent) => {
-      // If input is not focused and we're not processing, focus it for typing
-      if (document.activeElement !== commandInputRef.current && 
-          !isProcessing && 
-          showPrompt) {
-        
-        // Don't interfere with shortcuts or if user is typing in other inputs
-        if (e.target instanceof HTMLInputElement || 
-            e.target instanceof HTMLTextAreaElement ||
-            e.ctrlKey || 
-            e.metaKey || 
-            e.altKey) {
+      if (
+        document.activeElement !== commandInputRef.current &&
+        !isProcessing &&
+        showPrompt
+      ) {
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement ||
+          e.ctrlKey ||
+          e.metaKey ||
+          e.altKey
+        ) {
           return;
         }
-        
-        // For Linux terminal behavior: focus on any printable character or common keys
-        if (e.key.length === 1 || 
-            ['Enter', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+
+        if (
+          e.key.length === 1 ||
+          [
+            "Enter",
+            "Backspace",
+            "Delete",
+            "ArrowUp",
+            "ArrowDown",
+            "ArrowLeft",
+            "ArrowRight",
+          ].includes(e.key)
+        ) {
           focusInput();
         }
       }
     };
 
-    // Handle mousedown to detect start of selection
-    const handleMouseDown = (e: MouseEvent) => {
-      const target = e.target as HTMLElement;
-      // Don't interfere with interactive elements
-      if (target.tagName === 'BUTTON' || 
-          target.tagName === 'A' || 
-          target.tagName === 'INPUT' ||
-          target.closest('button, a, input, textarea')) {
-        return;
-      }
-      // Clear any existing selection to allow new selection to start
-      if (terminalRef.current?.contains(target)) {
-        // This mousedown might start a selection, so don't focus yet
-      }
-    };
-
     if (showPrompt) {
-      document.addEventListener('click', handleTerminalClick);
-      document.addEventListener('keydown', handleGlobalKeyDown);
-      document.addEventListener('mousedown', handleMouseDown);
+      document.addEventListener("click", handleTerminalClick);
+      document.addEventListener("keydown", handleGlobalKeyDown);
     }
 
     return () => {
-      document.removeEventListener('click', handleTerminalClick);
-      document.removeEventListener('keydown', handleGlobalKeyDown);
-      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener("click", handleTerminalClick);
+      document.removeEventListener("keydown", handleGlobalKeyDown);
     };
   }, [showPrompt, isProcessing, focusInput]);
-
-  useEffect(() => {
-    const loadResources = async () => {
-      if (!isAuthenticated) return;
-      
-      setShowBinary(true);
-      await sleep(400);
-      
-      setShowPanda(true);
-      await sleep(800);
-      
-      setShowWelcome(true);
-      await sleep(1200);
-      
-      setShowPrompt(true);
-    };
-    
-    if (isAuthenticated) {
-      loadResources();
-    }
-  }, [isAuthenticated]);
 
   const simulateProcessing = async () => {
     setIsProcessing(true);
@@ -154,7 +137,7 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) =>
     setHistoryIndex(-1);
     
     const cmd = currentCommand.trim().toLowerCase();
-    let output: JSX.Element;
+    let output: React.ReactElement;
     
     // Handle your existing page components
     if (cmd === 'projects') {
@@ -183,7 +166,7 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) =>
       );
     } else {
       // Default command map for built-in terminal commands
-      const commandMap: { [key: string]: () => JSX.Element } = {
+      const commandMap: { [key: string]: () => React.ReactElement } = {
         help: () => (
           <div className="mt-2 p-4 rounded bg-black/50">
             <div className="text-green-400 font-bold mb-2">Available Commands:</div>
@@ -280,7 +263,7 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) =>
       {isAuthenticated && (
         <>
           {showBinary && (
-            <div className="mb-4 opacity-0 animate-fadeIn" style={{ animationFillMode: 'forwards' }}>
+            <div className="mb-4">
               <div className="text-green-500 text-xs break-all select-text">
                 {generateBinary(150)}
               </div>
@@ -288,15 +271,13 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) =>
           )}
           
           {showPanda && (
-            <div className="mb-4 opacity-0 animate-fadeIn" style={{ animationDelay: '0.4s', animationFillMode: 'forwards' }}>
-              <pre className="text-green-400 text-xs overflow-x-auto select-text">
-                {generatePandaAscii()}
-              </pre>
-            </div>
+            <Suspense fallback={<div className="text-emerald-500 text-xs">loading greet…</div>}>
+              <PandaIntro onComplete={onPandaComplete} />
+            </Suspense>
           )}
           
           {showWelcome && (
-            <div className="mb-4 p-4 border border-green-500/20 rounded bg-black/30 opacity-0 animate-fadeIn" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
+            <div className="mb-4 p-4 border border-green-500/20 rounded bg-black/30">
               <div className="text-cyan-400 select-text">
                 {welcomeText}
                 <span className="animate-pulse">|</span>
@@ -305,7 +286,7 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) =>
           )}
           
           {showPrompt && (
-            <div className="opacity-0 animate-fadeIn" style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}>
+            <div>
               <div className="mb-4 select-text">
                 {commandOutput}
               </div>

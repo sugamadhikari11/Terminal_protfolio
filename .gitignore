@@ -25,3 +25,22 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Next.js
+.next/
+out/
+deploy-bundle/
+deploy-bundle.tar.gz
+
+# Local / oversized assets (not used by the site)
+spartan_armour_mkv_-_halo_reach.glb
+kung_fu_panda_-_po_rigged.glb
+*.glb
+!public/models/*.glb
+
+# Secrets / tokens
+ghp*
+ghp *
+*.pem
+azureprotfolio_key.pem
+tsconfig.tsbuildinfo

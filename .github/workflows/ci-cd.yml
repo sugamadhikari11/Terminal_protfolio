@@ -18,11 +18,11 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build project
         run: npm run build
@@ -40,26 +40,34 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Build project
+      - name: Build Next.js standalone
         run: npm run build
 
-      - name: Copy Nginx config to server
+      - name: Pack standalone deploy bundle
+        run: |
+          mkdir -p deploy-bundle/.next
+          cp -r .next/standalone/. deploy-bundle/
+          cp -r .next/static deploy-bundle/.next/static
+          cp -r public deploy-bundle/public
+          cp scripts/nginx.conf deploy-bundle/nginx.conf
+          tar -czf deploy-bundle.tar.gz -C deploy-bundle .
+
+      - name: Copy bundle to server
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.AZURE_VM_HOST }}
           username: ${{ secrets.AZURE_VM_USERNAME }}
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
-          source: "scripts/nginx.conf"
+          source: "deploy-bundle.tar.gz"
           target: "/tmp/"
-          strip_components: 1
 
-      - name: Setup Nginx configuration
+      - name: Install/restart app on VM
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.AZURE_VM_HOST }}
@@ -67,43 +75,33 @@ jobs:
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
           script: |
             set -e
-            sudo mkdir -p /var/www/terminal-portfolio
+            APP_DIR=/home/${USER}/terminal-portfolio
+            mkdir -p "$APP_DIR"
+            tar -xzf /tmp/deploy-bundle.tar.gz -C "$APP_DIR"
+            rm -f /tmp/deploy-bundle.tar.gz
 
-            if [ ! -f /etc/nginx/sites-available/portfolio ] || ! cmp -s /tmp/nginx.conf /etc/nginx/sites-available/portfolio; then
-              echo "Updating Nginx configuration..."
-              sudo cp /tmp/nginx.conf /etc/nginx/sites-available/portfolio
+            # Nginx reverse proxy → Next on :3000
+            if [ ! -f /etc/nginx/sites-available/portfolio ] || ! cmp -s "$APP_DIR/nginx.conf" /etc/nginx/sites-available/portfolio; then
+              sudo cp "$APP_DIR/nginx.conf" /etc/nginx/sites-available/portfolio
               sudo ln -sf /etc/nginx/sites-available/portfolio /etc/nginx/sites-enabled/
               sudo rm -f /etc/nginx/sites-enabled/default
               sudo nginx -t
               sudo systemctl reload nginx
-            else
-              echo "Nginx configuration is up to date"
             fi
 
-      - name: Copy build files to server
-        uses: appleboy/scp-action@v0.1.4
-        with:
-          host: ${{ secrets.AZURE_VM_HOST }}
-          username: ${{ secrets.AZURE_VM_USERNAME }}
-          key: ${{ secrets.AZURE_VM_SSH_KEY }}
-          source: "dist/*"
-          target: "/tmp/terminal-portfolio-deploy"
-          strip_components: 1
+            # Ensure Node 24 + pm2
+            if ! command -v node >/dev/null 2>&1 || [ "$(node -v | cut -d. -f1 | tr -d v)" -lt 24 ]; then
+              curl -fsSL https://deb.nodesource.com/setup_24.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+            if ! command -v pm2 >/dev/null 2>&1; then
+              sudo npm install -g pm2
+            fi
 
-      - name: Move files and set permissions
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.AZURE_VM_HOST }}
-          username: ${{ secrets.AZURE_VM_USERNAME }}
-          key: ${{ secrets.AZURE_VM_SSH_KEY }}
-          script: |
-            set -e
-            echo "Copying files to web directory..."
-            sudo mkdir -p /var/www/terminal-portfolio
-            sudo rm -rf /var/www/terminal-portfolio/*
-            sudo cp -r /tmp/terminal-portfolio-deploy/* /var/www/terminal-portfolio/
-            sudo chown -R www-data:www-data /var/www/terminal-portfolio
-            sudo chmod -R 755 /var/www/terminal-portfolio
-            rm -rf /tmp/terminal-portfolio-deploy
-            sudo systemctl reload nginx
-            echo "Deployment completed successfully!"
+            cd "$APP_DIR"
+            export PORT=3000
+            export HOSTNAME=0.0.0.0
+            pm2 delete terminal-portfolio >/dev/null 2>&1 || true
+            pm2 start server.js --name terminal-portfolio --update-env
+            pm2 save
+            echo "Next.js deploy completed"
