@@ -72,30 +72,52 @@ export function SiteChrome({ children, title }: SiteChromeProps) {
 
 /**
  * In-flow cloudy footer — end of page, matches GUI sky.
+ * `plain` drops the panel/gradient chrome (mobile GUI).
  */
-export function SiteFooter() {
+export function SiteFooter({
+  variant = "default",
+}: {
+  variant?: "default" | "plain";
+}) {
   const year = new Date().getFullYear();
+  const plain = variant === "plain";
 
   return (
-    <footer className="site-sky-footer relative mt-auto overflow-hidden border-t border-[#0d2138]/12 font-mono">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "linear-gradient(180deg, rgba(196,223,242,0.15) 0%, #c4dff2 30%, #d7eef9 70%, #b9d9ee 100%)",
-        }}
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -left-10 top-2 h-28 w-48 rounded-full bg-white/55 blur-2xl"
-      />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute right-6 top-0 h-24 w-56 rounded-full bg-white/45 blur-2xl"
-      />
+    <footer
+      className={[
+        "relative font-mono",
+        plain
+          ? "border-t border-[#0d2138]/15 pt-8 pb-2"
+          : "site-sky-footer mt-auto overflow-hidden border-t border-[#0d2138]/12",
+      ].join(" ")}
+    >
+      {!plain ? (
+        <>
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(180deg, rgba(196,223,242,0.15) 0%, #c4dff2 30%, #d7eef9 70%, #b9d9ee 100%)",
+            }}
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -left-10 top-2 h-28 w-48 rounded-full bg-white/55 blur-2xl"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute right-6 top-0 h-24 w-56 rounded-full bg-white/45 blur-2xl"
+          />
+        </>
+      ) : null}
 
-      <div className="relative z-10 mx-auto w-full px-[10%] py-10 md:py-12">
+      <div
+        className={[
+          "relative z-10 w-full",
+          plain ? "px-0 py-0" : "mx-auto px-[10%] py-10 md:py-12",
+        ].join(" ")}
+      >
         <p className="mb-3 text-[10px] uppercase tracking-[0.28em] text-[#1a3a5c]/55">
           Explore
         </p>

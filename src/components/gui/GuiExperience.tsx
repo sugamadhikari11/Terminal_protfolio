@@ -11,7 +11,23 @@ import type { GuiPhase } from "./types";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileGuiPortfolio from "./MobileGuiPortfolio";
 
-preloadGuiModels();
+/** Desktop only — mobile GUI never mounts WebGL / the plane */
+if (typeof window !== "undefined" && window.innerWidth >= 768) {
+  preloadGuiModels();
+}
+
+function MobileGuiFaceSky() {
+  return (
+    <div
+      className="h-full w-full"
+      style={{
+        background:
+          "linear-gradient(160deg, #c4dff2 0%, #d8eef8 42%, #b8d8ee 100%)",
+      }}
+      aria-hidden
+    />
+  );
+}
 
 type GuiExperienceProps = {
   fullscreen?: boolean;
@@ -60,6 +76,12 @@ export default function GuiExperience({
   }, [loadProgressHint, loadProgress]);
 
   useEffect(() => {
+    if (isMobile) {
+      setPlaneReady(true);
+      setLoadProgress(1);
+      return;
+    }
+
     let cancelled = false;
     if (isPlaneLoaded()) {
       setPlaneReady(true);
@@ -88,7 +110,7 @@ export default function GuiExperience({
       cancelled = true;
       window.clearInterval(soft);
     };
-  }, []);
+  }, [isMobile]);
 
   const canvasActive = (fullscreen || warmCanvas || preview) && planeReady;
 
@@ -171,9 +193,10 @@ export default function GuiExperience({
   const skyCover =
     !preview && (!fullscreen || guiPhase === "idle") && !(warmCanvas && guiPhase === "world");
 
-  // ── Mobile: skip WebGL/plane entirely — show a clean static sky layout ──
-  if (isMobile && fullscreen) {
-    return <MobileGuiPortfolio />;
+  // ── Mobile: never mount WebGL/plane (fullscreen OR cube-face morph/preview) ──
+  if (isMobile) {
+    if (fullscreen) return <MobileGuiPortfolio />;
+    return <MobileGuiFaceSky />;
   }
 
   return (

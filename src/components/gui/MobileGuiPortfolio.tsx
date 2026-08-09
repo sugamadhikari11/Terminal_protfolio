@@ -117,24 +117,31 @@ function ScreenSection({
   id,
   children,
   className = "",
+  tall = false,
+  end = false,
 }: {
   id?: string;
   children: React.ReactNode;
   className?: string;
+  /** Content may exceed one viewport — grow instead of clipping */
+  tall?: boolean;
+  /** Last section — size to content, no empty sky below */
+  end?: boolean;
 }) {
   return (
     <section
       id={id}
       className={[
         "box-border flex w-full snap-start flex-col",
-        "min-h-[100dvh] px-5",
+        end ? "min-h-0" : "min-h-[100dvh]",
+        tall || end ? "h-auto" : "",
+        "px-5",
         "pt-[max(4.25rem,calc(env(safe-area-inset-top)+3.25rem))]",
         "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
         className,
       ].join(" ")}
     >
       <div className="mx-auto w-full max-w-xl shrink-0">{children}</div>
-      {/* Remaining viewport stays empty sky — next section starts on its own screen */}
     </section>
   );
 }
@@ -422,7 +429,7 @@ export default function MobileGuiPortfolio() {
 
   return (
     <div
-      className="fixed inset-0 z-[30] snap-y snap-mandatory overflow-y-auto overscroll-contain"
+      className="gui-portfolio fixed inset-0 z-[30] snap-y snap-mandatory overflow-y-auto overscroll-contain"
       style={{
         background: "linear-gradient(160deg, #c4dff2 0%, #d8eef8 40%, #b8d8ee 100%)",
       }}
@@ -479,51 +486,58 @@ export default function MobileGuiPortfolio() {
                   View projects
                 </SoftButton>
                 <SoftButton href="/resume.pdf">Resume</SoftButton>
-                <SoftButton href="/about">About</SoftButton>
+                <SoftButton href="#mob-about">About</SoftButton>
               </div>
             </FadeItem>
           </Stagger>
         </ScreenSection>
 
-        {/* ── About ── */}
-        <ScreenSection>
+        {/* ── About (full bio + roles — scroll if taller than one screen) ── */}
+        <ScreenSection id="mob-about" tall>
           <Reveal delay={0.02}>
             <Eyebrow>About</Eyebrow>
             <SectionTitle>{profile.mission}</SectionTitle>
-            <Lead>{profile.education}</Lead>
-          </Reveal>
-        </ScreenSection>
+            <Lead>{profile.tagline}</Lead>
+            <p className={`mt-3 text-[0.9rem] leading-relaxed ${ink.soft}`}>
+              {profile.education}
+            </p>
+            <p className={`mt-2 font-mono text-[10px] uppercase tracking-[0.22em] ${ink.mute}`}>
+              {profile.location}
+            </p>
 
-        {/* ── Experience ── */}
-        <ScreenSection>
-          <Reveal>
-            <Eyebrow>Experience</Eyebrow>
-            <SectionTitle>Roles</SectionTitle>
-            <Stagger className="mt-6 space-y-5" delay={0.06}>
+            <ul className="mt-7 space-y-5">
               {experience.map((item) => (
-                <FadeItem key={item.role + item.period}>
-                  <li className={`list-none border-l-2 pl-4 ${ink.line}`}>
-                    <div className={`font-mono text-[0.95rem] font-semibold ${ink.strong}`}>
-                      {item.role}
-                      {item.org && (
-                        <span className={`font-normal ${ink.mute}`}> · {item.org}</span>
-                      )}
-                    </div>
-                    <p className={`font-mono text-[9px] uppercase tracking-[0.2em] ${ink.mute}`}>
-                      {item.period}
-                    </p>
-                    <p className={`mt-1 text-[0.85rem] leading-snug ${ink.soft}`}>
-                      {item.detail}
-                    </p>
-                  </li>
-                </FadeItem>
+                <li
+                  key={item.role + item.period}
+                  className={`list-none border-l-2 pl-4 ${ink.line}`}
+                >
+                  <div className={`font-mono text-[0.95rem] font-semibold ${ink.strong}`}>
+                    {item.role}
+                    {item.org && (
+                      <span className={`font-normal ${ink.mute}`}> · {item.org}</span>
+                    )}
+                  </div>
+                  <p className={`font-mono text-[9px] uppercase tracking-[0.2em] ${ink.mute}`}>
+                    {item.period}
+                  </p>
+                  <p className={`mt-1 text-[0.85rem] leading-snug ${ink.soft}`}>
+                    {item.detail}
+                  </p>
+                </li>
               ))}
-            </Stagger>
+            </ul>
+
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              <SoftButton href="/about" primary>
+                Full about page
+              </SoftButton>
+              <SoftButton href="/blog">Blog</SoftButton>
+            </div>
           </Reveal>
         </ScreenSection>
 
         {/* ── Skills ── */}
-        <ScreenSection>
+        <ScreenSection tall>
           <Reveal>
             <Eyebrow>Skills</Eyebrow>
             <SectionTitle>Toolkit</SectionTitle>
@@ -554,7 +568,7 @@ export default function MobileGuiPortfolio() {
         </ScreenSection>
 
         {/* ── Projects (can grow taller than one screen) ── */}
-        <ScreenSection id="mob-projects">
+        <ScreenSection id="mob-projects" tall>
           <Reveal>
             <Eyebrow>Projects</Eyebrow>
             <SectionTitle>Selected Work</SectionTitle>
@@ -571,8 +585,8 @@ export default function MobileGuiPortfolio() {
           </Reveal>
         </ScreenSection>
 
-        {/* ── Contact ── */}
-        <ScreenSection>
+        {/* ── Contact + footer (no empty sky after page ends) ── */}
+        <ScreenSection end>
           <Reveal>
             <Eyebrow>Contact</Eyebrow>
             <SectionTitle>Let&apos;s build</SectionTitle>
@@ -597,13 +611,10 @@ export default function MobileGuiPortfolio() {
               <SoftButton href="/references">References</SoftButton>
             </div>
           </Reveal>
-        </ScreenSection>
 
-        {/* ── Footer ── */}
-        <ScreenSection>
-          <Reveal delay={0.04}>
-            <SiteFooter />
-          </Reveal>
+          <div className="mt-12">
+            <SiteFooter variant="plain" />
+          </div>
         </ScreenSection>
       </div>
     </div>

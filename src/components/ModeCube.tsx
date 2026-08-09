@@ -48,6 +48,10 @@ function computeCubeSize(): CubeSize {
   return { width, height, depth };
 }
 
+function isMobileViewport() {
+  return typeof window !== "undefined" && window.innerWidth < 768;
+}
+
 function applyCubeCssVars(el: HTMLElement, s: CubeSize) {
   el.style.setProperty("--cube-w", `${s.width}px`);
   el.style.setProperty("--cube-h", `${s.height}px`);
@@ -342,10 +346,14 @@ const ModeCube: React.FC = () => {
       applyTerminalRest(spinSize);
       setArmingGui(true);
       setPlaneProgress(0);
-      // Load on the GUI face during spin — intro waits until this finishes
-      void import("./gui/preloadModels").then((m) =>
-        m.ensurePlaneLoaded((p) => setPlaneProgress(p))
-      );
+      // Desktop only — mobile GUI is static sky, no GLB plane
+      if (!isMobileViewport()) {
+        void import("./gui/preloadModels").then((m) =>
+          m.ensurePlaneLoaded((p) => setPlaneProgress(p))
+        );
+      } else {
+        setPlaneProgress(1);
+      }
     } else {
       setArmingGui(false);
       applyGuiCubeRest(spinSize);
@@ -469,12 +477,17 @@ const ModeCube: React.FC = () => {
       });
 
       // Stay on the cube face with LOADING until the plane is ready — smooth intro
+      // Mobile skips the plane entirely
       setFaceYaw(-180);
-      try {
-        const { ensurePlaneLoaded } = await import("./gui/preloadModels");
-        await ensurePlaneLoaded((p) => setPlaneProgress(p));
-        setPlaneProgress(1);
-      } catch {
+      if (!isMobileViewport()) {
+        try {
+          const { ensurePlaneLoaded } = await import("./gui/preloadModels");
+          await ensurePlaneLoaded((p) => setPlaneProgress(p));
+          setPlaneProgress(1);
+        } catch {
+          setPlaneProgress(1);
+        }
+      } else {
         setPlaneProgress(1);
       }
 
