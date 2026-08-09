@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, KeyboardEvent, useCallback, lazy, Suspense } from 'react';
+import Link from 'next/link';
 import { sleep, generateBinary, terminalCommands, getCommandDescription } from '../utils/terminalUtils';
 import { useTypewriter } from '../hooks/typeWriter';
 import { Projects, Skills, Contact, Resume, AboutMe, Exit } from './index';
@@ -182,9 +183,9 @@ const TerminalContent: React.FC<TerminalContentProps> = ({
         <div className="mt-2 space-y-2 text-sm text-zinc-200">
           <p className="text-emerald-400">Opening blog index…</p>
           <p>
-            <a href="/blog" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
+            <Link href="/blog" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
               /blog
-            </a>{" "}
+            </Link>{" "}
             — Web3, AI, and full-stack notes (SEO pages).
           </p>
           <p className="text-zinc-500">Tip: use the link above, or type <span className="text-cyan-400">pages</span>.</p>
@@ -208,9 +209,15 @@ const TerminalContent: React.FC<TerminalContentProps> = ({
             ["/resume.pdf", "Resume PDF"],
           ].map(([href, label]) => (
             <div key={href} className="flex flex-wrap gap-2">
-              <a href={href} className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
-                {href}
-              </a>
+              {href.endsWith(".pdf") ? (
+                <a href={href} className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
+                  {href}
+                </a>
+              ) : (
+                <Link href={href} className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
+                  {href}
+                </Link>
+              )}
               <span className="text-zinc-500">— {label}</span>
             </div>
           ))}

@@ -575,12 +575,8 @@ const ModeCube: React.FC = () => {
     busy,
     cubeEl,
     faceYaw,
-    half,
     mode,
-    restZ,
     sceneEl,
-    size.height,
-    size.width,
     stageEl,
   ]);
 
