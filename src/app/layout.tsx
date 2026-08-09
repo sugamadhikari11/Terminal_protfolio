@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
 import { profile, contacts } from "@/data/portfolio";
+import { SITE_NAV, SITE_NAME, SITE_URL } from "@/lib/site";
 
-const SITE_URL = "https://sugamadhikari.com.np";
 const TITLE = "Sugam Adhikari (SA) | Full-Stack, Web3 & Data Science Portfolio";
 const DESCRIPTION =
   "Sugam Adhikari (SA) — full-stack developer in Kathmandu, Nepal. Portfolio of Next.js, Web3, Solidity, and data science projects. Interactive terminal + 3D sky experience.";
@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: SITE_URL,
-    siteName: "Sugam Adhikari — SA Portfolio",
+    siteName: SITE_NAME,
     title: TITLE,
     description: DESCRIPTION,
   },
@@ -91,7 +91,7 @@ const jsonLd = {
       "@type": "WebSite",
       "@id": `${SITE_URL}/#website`,
       url: SITE_URL,
-      name: "SA Portfolio",
+      name: SITE_NAME,
       description: DESCRIPTION,
       publisher: { "@id": `${SITE_URL}/#person` },
       inLanguage: "en",
@@ -129,6 +129,16 @@ const jsonLd = {
       name: TITLE,
       description: DESCRIPTION,
       mainEntity: { "@id": `${SITE_URL}/#person` },
+    },
+    {
+      "@type": "SiteNavigationElement",
+      "@id": `${SITE_URL}/#nav`,
+      name: "Primary",
+      hasPart: SITE_NAV.map((item) => ({
+        "@type": "WebPage",
+        name: item.label,
+        url: item.href === "/" ? SITE_URL : `${SITE_URL}${item.href}`,
+      })),
     },
   ],
 };

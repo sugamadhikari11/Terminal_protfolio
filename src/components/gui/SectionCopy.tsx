@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence, type Variants } from "framer-motion";
+import { createPortal } from "react-dom";
 import {
   contacts,
   experience,
@@ -295,6 +296,159 @@ const projectVariants: Variants = {
   },
 };
 
+/* ── Project Detail Modal ──────────────────────────────────────────── */
+const modalBackdropVariants: Variants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.25, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, transition: { duration: 0.2, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const modalPanelVariants: Variants = {
+  initial: { opacity: 0, y: 32, scale: 0.97 },
+  animate: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1], when: "beforeChildren", staggerChildren: 0.055 },
+  },
+  exit: { opacity: 0, y: 20, scale: 0.97, transition: { duration: 0.24, ease: [0.22, 1, 0.36, 1] } },
+};
+
+const modalLineVariants: Variants = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] } },
+};
+
+function ProjectDetailModal({
+  project,
+  index,
+  total,
+  onClose,
+}: {
+  project: Project;
+  index: number;
+  total: number;
+  onClose: () => void;
+}) {
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  // Lock body scroll while open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
+  const allHighlights = project.highlights ?? [];
+
+  const modalContent = (
+    <AnimatePresence>
+      <motion.div
+        key="modal-backdrop"
+        variants={modalBackdropVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="fixed inset-0 z-[9999] flex items-end justify-center sm:items-center"
+        style={{ background: "rgba(7,21,37,0.62)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)" }}
+        onClick={onClose}
+      >
+        <motion.div
+          key="modal-panel"
+          variants={modalPanelVariants}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          className="relative w-full max-w-2xl overflow-hidden rounded-t-2xl sm:rounded-2xl"
+          style={{
+            background: "rgba(196,223,242,0.97)",
+            boxShadow: "0 32px 80px rgba(7,21,37,0.32), 0 2px 0 rgba(255,255,255,0.45) inset",
+            maxHeight: "92dvh",
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-start justify-between gap-4 border-b border-[#0d2138]/14 px-6 pb-4 pt-5 sm:px-8 sm:pt-6">
+            <motion.div variants={modalLineVariants}>
+              <p className={`mb-1 font-mono text-[10px] uppercase tracking-[0.38em] ${ink.mute}`}>
+                Project {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+              </p>
+              <h2 className={`font-mono text-xl font-medium leading-tight tracking-tight sm:text-2xl ${ink.strong}`}>
+                {project.name}
+              </h2>
+            </motion.div>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close project details"
+              className={`mt-1 shrink-0 rounded-full border border-[#0d2138]/18 bg-white/50 p-1.5 transition hover:bg-white/80 ${ink.strong}`}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+                <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+
+          {/* Scrollable body */}
+          <div className="overflow-y-auto overscroll-contain px-6 pb-8 pt-5 sm:px-8 sm:pb-10">
+            <motion.p variants={modalLineVariants} className={`font-mono text-[11px] uppercase tracking-[0.22em] ${ink.mute}`}>
+              {project.role} · {project.period}
+            </motion.p>
+
+            <motion.p variants={modalLineVariants} className={`mt-4 text-[1.05rem] leading-relaxed sm:text-[1.1rem] ${ink.body}`}>
+              {project.description}
+            </motion.p>
+
+            {allHighlights.length > 0 && (
+              <motion.div variants={modalLineVariants} className="mt-6">
+                <p className={`mb-3 font-mono text-[10px] uppercase tracking-[0.3em] ${ink.mute}`}>Highlights</p>
+                <ul className="space-y-2">
+                  {allHighlights.map((h) => (
+                    <li key={h} className={`flex items-start gap-2.5 text-sm leading-relaxed sm:text-[0.95rem] ${ink.soft}`}>
+                      <span className={`mt-0.5 shrink-0 font-mono text-base leading-none ${ink.mute}`}>→</span>
+                      {h}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
+
+            {/* Tech chips */}
+            <motion.div variants={modalLineVariants} className="mt-6">
+              <p className={`mb-2.5 font-mono text-[10px] uppercase tracking-[0.3em] ${ink.mute}`}>Stack</p>
+              <div className="flex flex-wrap gap-2">
+                {project.tech.map((t) => (
+                  <span key={t} className={`px-2.5 py-1 font-mono text-[11px] ${ink.chip}`}>{t}</span>
+                ))}
+              </div>
+            </motion.div>
+
+            {/* Action buttons */}
+            <motion.div variants={modalLineVariants} className="mt-8 flex flex-wrap gap-3">
+              {project.link ? (
+                <Btn href={project.link} primary>Open repo ↗</Btn>
+              ) : (
+                <span className={`inline-flex items-center px-4 py-2.5 font-mono text-[10px] uppercase tracking-[0.18em] opacity-50 border border-[#0d2138]/20 ${ink.strong}`}>
+                  Private project
+                </span>
+              )}
+              <Btn onClick={onClose}>Close</Btn>
+            </motion.div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  );
+
+  if (typeof document === "undefined") return null;
+  return createPortal(modalContent, document.body);
+}
+
 /** Project body only — parent SectionFrame stays mounted so reverse-scroll isn't blocked. */
 function ProjectBody({
   project,
@@ -307,59 +461,60 @@ function ProjectBody({
   total: number;
   textSide: "left" | "right";
 }) {
+  const [showModal, setShowModal] = useState(false);
   const highlights = project.highlights?.slice(0, 1) ?? [];
   return (
-    <motion.div variants={projectVariants} initial="initial" animate="animate" exit="exit">
-      <FlowLine>
-        <Eyebrow>
-          Project {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
-        </Eyebrow>
-      </FlowLine>
-
-      <FlowLine>
-        {project.link ? (
-          <a
-            href={project.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={`font-mono text-[1.45rem] font-medium leading-[1.1] tracking-[-0.02em] underline-offset-4 transition hover:underline max-md:text-[1.28rem] sm:text-[1.85rem] md:text-[2.35rem] ${ink.strong}`}
-          >
-            {project.name}
-          </a>
-        ) : (
-          <Display>{project.name}</Display>
-        )}
-      </FlowLine>
-
-      <FlowLine>
-        <Lead>{project.summary}</Lead>
-      </FlowLine>
-      <FlowLine>
-        <Meta>
-          {project.role} · {project.period}
-        </Meta>
-      </FlowLine>
-
-      {highlights.length ? (
+    <>
+      <motion.div variants={projectVariants} initial="initial" animate="animate" exit="exit">
         <FlowLine>
-          <ul className={["mt-4 max-w-md space-y-2 text-[0.9rem] leading-snug max-md:mt-2.5 max-md:space-y-1.5 max-md:text-[0.85rem]", ink.soft].join(" ")}>
-            {highlights.map((h) => (
-              <li key={h}>
-                <span className={ink.mute}>— </span>
-                {h}
-              </li>
-            ))}
-          </ul>
+          <Eyebrow>
+            Project {String(index + 1).padStart(2, "0")} / {String(total).padStart(2, "0")}
+          </Eyebrow>
         </FlowLine>
-      ) : null}
 
-      <FlowLine>
-        <p className={`mt-5 font-mono text-[10px] uppercase tracking-[0.18em] max-md:mt-3 max-md:text-[9px] max-md:normal-case max-md:tracking-[0.04em] ${ink.mute}`}>
-          {project.tech.join(" · ")}
-        </p>
-      </FlowLine>
+        <FlowLine>
+          {project.link ? (
+            <a
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`font-mono text-[1.45rem] font-medium leading-[1.1] tracking-[-0.02em] underline-offset-4 transition hover:underline max-md:text-[1.28rem] sm:text-[1.85rem] md:text-[2.35rem] ${ink.strong}`}
+            >
+              {project.name}
+            </a>
+          ) : (
+            <Display>{project.name}</Display>
+          )}
+        </FlowLine>
 
-      {project.link ? (
+        <FlowLine>
+          <Lead>{project.summary}</Lead>
+        </FlowLine>
+        <FlowLine>
+          <Meta>
+            {project.role} · {project.period}
+          </Meta>
+        </FlowLine>
+
+        {highlights.length ? (
+          <FlowLine>
+            <ul className={["mt-4 max-w-md space-y-2 text-[0.9rem] leading-snug max-md:mt-2.5 max-md:space-y-1.5 max-md:text-[0.85rem]", ink.soft].join(" ")}>
+              {highlights.map((h) => (
+                <li key={h}>
+                  <span className={ink.mute}>— </span>
+                  {h}
+                </li>
+              ))}
+            </ul>
+          </FlowLine>
+        ) : null}
+
+        <FlowLine>
+          <p className={`mt-5 font-mono text-[10px] uppercase tracking-[0.18em] max-md:mt-3 max-md:text-[9px] max-md:normal-case max-md:tracking-[0.04em] ${ink.mute}`}>
+            {project.tech.join(" · ")}
+          </p>
+        </FlowLine>
+
         <FlowLine>
           <div
             className={[
@@ -367,11 +522,25 @@ function ProjectBody({
               textSide === "right" ? "sm:justify-end" : "",
             ].join(" ")}
           >
-            <Btn href={project.link}>Open repo</Btn>
+            {/* Learn More — always visible */}
+            <Btn primary onClick={() => setShowModal(true)}>Learn more</Btn>
+            <Btn href={`/projects/${project.slug}`}>Project page</Btn>
+            {project.link ? (
+              <Btn href={project.link}>Open repo</Btn>
+            ) : null}
           </div>
         </FlowLine>
-      ) : null}
-    </motion.div>
+      </motion.div>
+
+      {showModal && (
+        <ProjectDetailModal
+          project={project}
+          index={index}
+          total={total}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
   );
 }
 
@@ -511,6 +680,8 @@ export default function SectionCopy({ scrollRef }: SectionCopyProps) {
                   <Btn primary onClick={() => scrollTo(0.16)}>
                     Explore
                   </Btn>
+                  <Btn href="/about">About</Btn>
+                  <Btn href="/projects">Projects</Btn>
                   <Btn href="/resume.pdf">Resume</Btn>
                 </div>
               </FlowLine>
@@ -556,6 +727,12 @@ export default function SectionCopy({ scrollRef }: SectionCopyProps) {
                     </li>
                   ))}
                 </ul>
+              </FlowLine>
+              <FlowLine>
+                <div className="mt-5 flex flex-wrap gap-2 max-md:mt-3">
+                  <Btn href="/about">Full about page</Btn>
+                  <Btn href="/blog">Blog</Btn>
+                </div>
               </FlowLine>
             </SectionFrame>
           )}
@@ -657,6 +834,8 @@ export default function SectionCopy({ scrollRef }: SectionCopyProps) {
                     Email me
                   </Btn>
                   <Btn href="/resume.pdf">Resume</Btn>
+                  <Btn href="/blog">Blog</Btn>
+                  <Btn href="/references">References</Btn>
                   <Btn href={contacts[1]?.href ?? "#"}>GitHub</Btn>
                   <Btn href={contacts[2]?.href ?? "#"}>LinkedIn</Btn>
                 </div>
@@ -682,6 +861,31 @@ export default function SectionCopy({ scrollRef }: SectionCopyProps) {
             {String(pIndex + 1).padStart(2, "0")} · {activeProject.name}
           </p>
         ) : null}
+      </div>
+
+      {/* Bottom-right micro-footer — model credit + copyright (desktop only) */}
+      <div
+        className={[
+          "pointer-events-auto absolute z-40 max-md:hidden [transform:translateZ(0)]",
+          "bottom-7 right-7 md:bottom-8 md:right-10",
+          "flex flex-col items-end gap-0.5",
+        ].join(" ")}
+      >
+        <p className={`font-mono text-[9px] tracking-[0.18em] ${ink.mute} ${ink.shadow}`}>
+          © {new Date().getFullYear()} {profile.name}
+        </p>
+        <p className={`font-mono text-[8px] tracking-[0.1em] ${ink.mute} ${ink.shadow} opacity-75`}>
+          3D model:{" "}
+          <a
+            href="https://sketchfab.com/3d-models/stylized-ww1-plane-c4edeb0e410f46e8a4db320879f0a1db"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline decoration-dotted underline-offset-2 transition-opacity hover:opacity-100"
+          >
+            Stylized WW1 Plane
+          </a>
+          {" "}via Sketchfab
+        </p>
       </div>
     </div>
   );

@@ -8,9 +8,13 @@ const PandaIntro = lazy(() => import('./PandaIntro'));
 // Enhanced Terminal Content
 interface TerminalContentProps {
   isAuthenticated: boolean;
+  onOpenGui?: () => void;
 }
 
-const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) => {
+const TerminalContent: React.FC<TerminalContentProps> = ({
+  isAuthenticated,
+  onOpenGui,
+}) => {
   const [showBinary, setShowBinary] = useState(false);
   const [showPanda, setShowPanda] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
@@ -159,6 +163,58 @@ const TerminalContent: React.FC<TerminalContentProps> = ({ isAuthenticated }) =>
     } else if (cmd === 'about') {
       output = (
           <AboutMe />
+      );
+    } else if (cmd === 'gui') {
+      output = (
+        <div className="mt-2 space-y-1 text-sm text-zinc-200">
+          <p className="text-emerald-400">Launching GUI mode…</p>
+          <p className="text-zinc-400">
+            Flipping to the sky portfolio. You can also click the glowing{" "}
+            <span className="text-green-400">GUI</span> button (top right).
+          </p>
+        </div>
+      );
+      window.setTimeout(() => {
+        onOpenGui?.();
+      }, 350);
+    } else if (cmd === 'blog') {
+      output = (
+        <div className="mt-2 space-y-2 text-sm text-zinc-200">
+          <p className="text-emerald-400">Opening blog index…</p>
+          <p>
+            <a href="/blog" className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
+              /blog
+            </a>{" "}
+            — Web3, AI, and full-stack notes (SEO pages).
+          </p>
+          <p className="text-zinc-500">Tip: use the link above, or type <span className="text-cyan-400">pages</span>.</p>
+        </div>
+      );
+      if (typeof window !== "undefined") {
+        window.setTimeout(() => {
+          window.location.href = "/blog";
+        }, 400);
+      }
+    } else if (cmd === 'pages') {
+      output = (
+        <div className="mt-2 space-y-1 text-sm">
+          <div className="mb-2 font-bold text-green-400">Site pages (indexed)</div>
+          {[
+            ["/", "Home — terminal + GUI"],
+            ["/about", "About Sugam Adhikari"],
+            ["/projects", "Projects index"],
+            ["/blog", "Blog"],
+            ["/references", "References & credits"],
+            ["/resume.pdf", "Resume PDF"],
+          ].map(([href, label]) => (
+            <div key={href} className="flex flex-wrap gap-2">
+              <a href={href} className="text-cyan-400 underline underline-offset-2 hover:text-cyan-300">
+                {href}
+              </a>
+              <span className="text-zinc-500">— {label}</span>
+            </div>
+          ))}
+        </div>
       );
     } else if (cmd === 'exit') {
       output = (

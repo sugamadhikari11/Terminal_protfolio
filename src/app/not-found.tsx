@@ -1,15 +1,17 @@
 import Link from "next/link";
+import { SiteChrome } from "@/components/site/SiteChrome";
+import { guiInk as ink } from "@/components/site/guiInk";
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black text-zinc-100">
-      <div className="text-center font-mono">
-        <h1 className="mb-4 text-4xl font-bold text-emerald-400">404</h1>
-        <p className="mb-4 text-xl text-zinc-400">Page not found</p>
-        <Link href="/" className="text-emerald-400 underline hover:text-emerald-300">
-          Return to Home
+    <SiteChrome title="404">
+      <div className="flex flex-1 flex-col items-center justify-center px-6 py-24 text-center">
+        <h1 className={`mb-3 font-mono text-4xl font-bold ${ink.strong}`}>404</h1>
+        <p className={`mb-6 ${ink.soft}`}>Page not found</p>
+        <Link href="/" className={ink.btnPrimary}>
+          ← Home
         </Link>
       </div>
-    </div>
+    </SiteChrome>
   );
 }

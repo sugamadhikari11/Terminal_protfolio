@@ -9,6 +9,7 @@ import { useGuiScrollDrive } from "./useGuiScrollDrive";
 import { ensurePlaneLoaded, isPlaneLoaded, preloadGuiModels } from "./preloadModels";
 import type { GuiPhase } from "./types";
 import { useIsMobile } from "@/hooks/use-mobile";
+import MobileGuiPortfolio from "./MobileGuiPortfolio";
 
 preloadGuiModels();
 
@@ -170,6 +171,11 @@ export default function GuiExperience({
   const skyCover =
     !preview && (!fullscreen || guiPhase === "idle") && !(warmCanvas && guiPhase === "world");
 
+  // ── Mobile: skip WebGL/plane entirely — show a clean static sky layout ──
+  if (isMobile && fullscreen) {
+    return <MobileGuiPortfolio />;
+  }
+
   return (
     <div
       ref={rootRef}
@@ -192,7 +198,7 @@ export default function GuiExperience({
               onDiscover={onDiscover}
               preview={preview}
               paused={paused}
-              mobile={isMobile && fullscreen}
+              mobile={false}
             />
           </GuiErrorBoundary>
         ) : (

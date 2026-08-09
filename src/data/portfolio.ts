@@ -30,6 +30,8 @@ export const experience = [
 ];
 
 export type Project = {
+  /** URL slug for /projects/[slug] */
+  slug: string;
   name: string;
   tech: string[];
   role: string;
@@ -40,10 +42,13 @@ export type Project = {
   description: string;
   highlights?: string[];
   link: string | null;
+  /** ISO date for sitemap lastmod */
+  updatedAt: string;
 };
 
 export const projects: Project[] = [
   {
+    slug: "multi-vendor-ecommerce",
     name: "Multi-vendor E-commerce Platform",
     tech: ["Next.js", "MongoDB", "TypeScript", "TailwindCSS"],
     role: "Full-stack Developer",
@@ -52,8 +57,10 @@ export const projects: Project[] = [
     description: "Next.js multi-vendor storefront with MongoDB catalogs and role-based seller / buyer flows.",
     highlights: ["Vendor dashboards · orders · payouts"],
     link: null,
+    updatedAt: "2026-08-04",
   },
   {
+    slug: "novachain-defi",
     name: "NovaChain DeFi",
     tech: ["Solidity", "React", "Hardhat", "Ethers.js"],
     role: "Blockchain Developer Intern",
@@ -62,8 +69,10 @@ export const projects: Project[] = [
     description: "DeFi modules in Solidity + Hardhat, wired to a React wallet UI.",
     highlights: ["Swap · lend · stake on-chain"],
     link: null,
+    updatedAt: "2026-06-15",
   },
   {
+    slug: "lottery-dapp-nft-auction",
     name: "Lottery DApp & NFT Auction",
     tech: ["Solidity", "Next.js", "Web3.js", "IPFS"],
     role: "Blockchain Trainee",
@@ -72,8 +81,10 @@ export const projects: Project[] = [
     description: "Transparent lottery + auction DApp with IPFS metadata and Next.js wallet UI.",
     highlights: ["List → bid → settle on-chain"],
     link: null,
+    updatedAt: "2025-02-28",
   },
   {
+    slug: "blockchain-product-list",
     name: "Blockchain Product List DApp",
     tech: ["TypeScript", "Solidity", "React"],
     role: "Developer",
@@ -82,8 +93,10 @@ export const projects: Project[] = [
     description: "Catalog and ownership live on-chain; React client for list and transfer.",
     highlights: ["Contract-owned catalog"],
     link: "https://github.com/sugamadhikari11/Blockchain-ProductList-Dapp",
+    updatedAt: "2024-11-01",
   },
   {
+    slug: "streamlit-model-visualization",
     name: "Streamlit Model Visualization",
     tech: ["Python", "Streamlit"],
     role: "Developer",
@@ -92,8 +105,10 @@ export const projects: Project[] = [
     description: "Streamlit app for charts, metrics, and model comparisons.",
     highlights: ["Interactive metric views"],
     link: "https://github.com/sugamadhikari11/Streamlit-model-visualization-webapp",
+    updatedAt: "2024-10-01",
   },
   {
+    slug: "admin-flight-booking",
     name: "Admin Flight Booking System",
     tech: ["Java"],
     role: "Developer",
@@ -101,8 +116,10 @@ export const projects: Project[] = [
     summary: "Flight search, booking, and admin CRUD.",
     description: "Java booking system with schedules, passengers, and admin tools.",
     link: "https://github.com/sugamadhikari11/Admin_Based_Flight_Booking_System",
+    updatedAt: "2024-09-01",
   },
   {
+    slug: "sales-management",
     name: "Sales Management",
     tech: ["PHP", "MySQL"],
     role: "Developer",
@@ -110,8 +127,16 @@ export const projects: Project[] = [
     summary: "Sales, inventory, and ops reporting.",
     description: "PHP + MySQL sales and inventory tracker with reports.",
     link: "https://github.com/sugamadhikari11/Sales_Management",
+    updatedAt: "2024-08-01",
   },
 ];
+
+export function getProject(slug: string) {
+  return projects.find((p) => p.slug === slug);
+}
+
+/** Featured subset used in the GUI flight experience */
+export const FEATURED_PROJECTS = projects.slice(0, 5);
 
 export const skillCategories = [
   {

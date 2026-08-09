@@ -2,10 +2,11 @@
 
 import React, { Suspense, useEffect, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
-import { Cloud, useAnimations, useGLTF } from "@react-three/drei";
+import { Cloud, Clouds, useAnimations, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
+import { MeshLambertMaterial } from "three";
 import gsap from "gsap";
-import { PLANE_MODEL } from "./preloadModels";
+import { CLOUD_TEXTURE, PLANE_MODEL } from "./preloadModels";
 import { preparePlaneModelFull, setPlaneStreaksVisible } from "./preparePlaneModel";
 
 type IntroPlaneSceneProps = {
@@ -28,10 +29,12 @@ function LightClouds({ clearRef }: { clearRef: React.MutableRefObject<{ t: numbe
 
   return (
     <group ref={group} position={[0, 0.7, -1.5]}>
-      <Cloud seed={41} position={[-2.4, 0.6, -1]} opacity={0.42} speed={0.016} segments={12} volume={4.5} color="#ffffff" fade={10} />
-      <Cloud seed={42} position={[2.6, 0.4, -0.8]} opacity={0.4} speed={0.014} segments={12} volume={4.5} color="#eef6ff" fade={10} />
-      <Cloud seed={43} position={[0, 1.4, -3.2]} opacity={0.38} speed={0.012} segments={12} volume={5} color="#f5fbff" fade={12} />
-      <Cloud seed={44} position={[0.4, -0.2, 0.6]} opacity={0.32} speed={0.018} segments={10} volume={3.5} color="#ffffff" fade={9} />
+      <Clouds texture={CLOUD_TEXTURE} material={MeshLambertMaterial} limit={80} frustumCulled={false}>
+        <Cloud seed={41} position={[-2.4, 0.6, -1]} opacity={0.42} speed={0.016} segments={12} volume={4.5} color="#ffffff" fade={10} />
+        <Cloud seed={42} position={[2.6, 0.4, -0.8]} opacity={0.4} speed={0.014} segments={12} volume={4.5} color="#eef6ff" fade={10} />
+        <Cloud seed={43} position={[0, 1.4, -3.2]} opacity={0.38} speed={0.012} segments={12} volume={5} color="#f5fbff" fade={12} />
+        <Cloud seed={44} position={[0.4, -0.2, 0.6]} opacity={0.32} speed={0.018} segments={10} volume={3.5} color="#ffffff" fade={9} />
+      </Clouds>
     </group>
   );
 }

@@ -193,7 +193,19 @@ const GuiPortfolio: React.FC<GuiPortfolioProps> = ({ instant = false }) => {
         </section>
 
         <footer className="border-t border-emerald-900/40 px-6 py-10 text-center font-mono text-xs text-zinc-600 md:px-10">
-          © {new Date().getFullYear()} {profile.name} · Flip back to terminal anytime
+          <p>© {new Date().getFullYear()} {profile.name} · Flip back to terminal anytime</p>
+          <p className="mt-2 text-zinc-700/50">
+            3D model:{" "}
+            <a
+              href="https://sketchfab.com/3d-models/stylized-ww1-plane-c4edeb0e410f46e8a4db320879f0a1db"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-dotted underline-offset-2 hover:text-zinc-500 transition-colors"
+            >
+              Stylized WW1 Plane
+            </a>
+            {" "}via Sketchfab
+          </p>
         </footer>
       </main>
     </div>

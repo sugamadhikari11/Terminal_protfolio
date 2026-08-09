@@ -4,8 +4,10 @@ import React, { useCallback, useEffect, useState } from "react";
 import Terminal from "./Terminal";
 import GuiFaceContent from "./gui/GuiFaceContent";
 import {
+  readGuiGuideDismissed,
   readGuiVisited,
   readSessionMode,
+  writeGuiGuideDismissed,
   writeGuiVisited,
   writeSessionMode,
 } from "@/lib/sessionMode";
@@ -115,6 +117,8 @@ const ModeCube: React.FC = () => {
   const [sessionReady, setSessionReady] = useState(false);
   /** Restored into fullscreen GUI — skip plane intro */
   const [resumeGuiWorld, setResumeGuiWorld] = useState(false);
+  /** Coach mark pointing at the glowing GUI button */
+  const [showGuiGuide, setShowGuiGuide] = useState(false);
 
   // Restore terminal/GUI preference for this browser session
   useEffect(() => {
@@ -132,16 +136,19 @@ const ModeCube: React.FC = () => {
       setPhase("gui");
       writeGuiVisited(true);
       writeSessionMode("gui");
-    } else {
-      writeSessionMode("terminal");
     }
-    setSessionReady(true);
+    // Defer ready so the initial phase=terminal paint cannot overwrite session
+    requestAnimationFrame(() => setSessionReady(true));
+    // First-time tip: point people at the glowing GUI control
+    if (!visited && !readGuiGuideDismissed() && saved !== "gui") {
+      setShowGuiGuide(true);
+    }
   }, []);
 
   useEffect(() => {
     if (!sessionReady) return;
     if (phase === "gui") writeSessionMode("gui");
-    if (phase === "terminal") writeSessionMode("terminal");
+    else if (phase === "terminal") writeSessionMode("terminal");
   }, [phase, sessionReady]);
 
   useEffect(() => {
@@ -672,7 +679,13 @@ const ModeCube: React.FC = () => {
             }
             aria-hidden={flatLayout || isMorphing || mode === "gui" || busy}
           >
-            <Terminal />
+            <Terminal
+              onOpenGui={() => {
+                writeGuiGuideDismissed();
+                setShowGuiGuide(false);
+                void flip();
+              }}
+            />
           </div>
 
           <div
@@ -767,15 +780,61 @@ const ModeCube: React.FC = () => {
         </div>
       </div>
 
+      {/* Assistant guide — only while on terminal, before first GUI visit */}
+      {showGuiGuide &&
+      sessionReady &&
+      !busy &&
+      !flatLayout &&
+      !isMorphing &&
+      faceYaw === 0 ? (
+        <div className="gui-guide" role="status" aria-live="polite">
+          <div className="gui-guide__arrow" aria-hidden>
+            <span className="gui-guide__arrow-head">↑</span>
+            <span className="gui-guide__arrow-line" />
+          </div>
+          <div className="gui-guide__card">
+            <p className="gui-guide__eyebrow">Quick tip</p>
+            <p className="gui-guide__title">Try the visual portfolio</p>
+            <p className="gui-guide__body">
+              Tap the glowing <strong>GUI</strong> button above to open the sky experience.
+            </p>
+            <button
+              type="button"
+              className="gui-guide__cta"
+              onClick={() => {
+                writeGuiGuideDismissed();
+                setShowGuiGuide(false);
+                void flip();
+              }}
+            >
+              Open GUI →
+            </button>
+            <button
+              type="button"
+              className="gui-guide__dismiss"
+              onClick={() => {
+                writeGuiGuideDismissed();
+                setShowGuiGuide(false);
+              }}
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
+      ) : null}
+
       <button
         type="button"
         onClick={() => {
+          writeGuiGuideDismissed();
+          setShowGuiGuide(false);
           void flip();
         }}
         disabled={busy}
         className={[
           "mode-switch",
           flatLayout || isMorphing || faceYaw === -180 ? "mode-switch--sky" : "",
+          showGuiGuide && !flatLayout && !isMorphing ? "mode-switch--guide" : "",
         ]
           .filter(Boolean)
           .join(" ")}
@@ -806,7 +865,9 @@ const ModeCube: React.FC = () => {
           <span className="mode-switch__label">
             {flatLayout || isMorphing || faceYaw === -180 ? "TERMINAL" : "GUI"}
           </span>
-          <span className="mode-switch__hint">switch mode</span>
+          <span className="mode-switch__hint">
+            {flatLayout || isMorphing || faceYaw === -180 ? "switch mode" : "click me"}
+          </span>
         </span>
       </button>
     </div>

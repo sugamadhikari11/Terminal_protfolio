@@ -64,6 +64,20 @@
     min-height: 100%;
   }
 
+  /* Content SEO pages (About / Projects / Blog / References) */
+  html:has(.site-doc),
+  body:has(.site-doc) {
+    overflow-x: hidden;
+    overflow-y: auto;
+    height: auto;
+    min-height: 100%;
+  }
+
+  /* Cloudy in-flow footer (content pages + mobile GUI) */
+  .site-sky-footer {
+    color: #0d2138;
+  }
+
   *::-webkit-scrollbar {
     width: 5px;
     height: 5px;
@@ -457,8 +471,8 @@ body:has(.gui-experience) {
   align-items: flex-end;
   gap: 0.15rem;
   padding: 0.65rem 1rem;
-  border: 1px solid rgba(34, 197, 94, 0.55);
-  background: rgba(0, 0, 0, 0.75);
+  border: 1px solid rgba(34, 197, 94, 0.7);
+  background: rgba(0, 0, 0, 0.8);
   color: #4ade80;
   font-family: "JetBrains Mono", monospace;
   cursor: pointer;
@@ -469,16 +483,186 @@ body:has(.gui-experience) {
     color 0.25s ease,
     transform 0.25s ease,
     box-shadow 0.25s ease;
-  box-shadow: 0 0 24px rgba(34, 197, 94, 0.12);
-  animation: mode-switch-pulse 2.8s ease-in-out infinite;
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.2),
+    0 0 28px rgba(34, 197, 94, 0.35),
+    0 0 56px rgba(34, 197, 94, 0.18);
+  animation: mode-switch-pulse 2.2s ease-in-out infinite;
 }
 
 .mode-switch:hover:not(:disabled) {
   border-color: rgba(74, 222, 128, 0.95);
-  background: rgba(6, 40, 20, 0.9);
+  background: rgba(6, 40, 20, 0.92);
   transform: translateY(-1px);
-  box-shadow: 0 0 32px rgba(34, 197, 94, 0.28);
+  box-shadow:
+    0 0 0 1px rgba(74, 222, 128, 0.35),
+    0 0 36px rgba(34, 197, 94, 0.5),
+    0 0 64px rgba(34, 197, 94, 0.25);
   animation: none;
+}
+
+.mode-switch--guide {
+  z-index: 62;
+  animation: mode-switch-pulse-strong 1.4s ease-in-out infinite;
+}
+
+/* Coach mark under the glowing GUI control */
+.gui-guide {
+  position: fixed;
+  z-index: 61;
+  top: 4.75rem;
+  right: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.35rem;
+  max-width: min(18.5rem, calc(100vw - 2rem));
+  pointer-events: none;
+  animation: gui-guide-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.gui-guide__arrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 1.6rem;
+  color: #4ade80;
+  pointer-events: none;
+}
+
+.gui-guide__arrow-line {
+  width: 2px;
+  height: 1.1rem;
+  background: linear-gradient(180deg, transparent, #4ade80);
+  animation: gui-guide-bounce 1.2s ease-in-out infinite;
+}
+
+.gui-guide__arrow-head {
+  font-size: 1rem;
+  line-height: 1;
+  margin-top: -0.15rem;
+  animation: gui-guide-bounce 1.2s ease-in-out infinite;
+  text-shadow: 0 0 12px rgba(74, 222, 128, 0.7);
+}
+
+.gui-guide__card {
+  pointer-events: auto;
+  border: 1px solid rgba(74, 222, 128, 0.45);
+  background: rgba(2, 12, 8, 0.92);
+  color: #d1fae5;
+  padding: 0.9rem 1rem 0.85rem;
+  box-shadow:
+    0 0 0 1px rgba(34, 197, 94, 0.12),
+    0 12px 40px rgba(0, 0, 0, 0.45),
+    0 0 28px rgba(34, 197, 94, 0.18);
+  backdrop-filter: blur(12px);
+  font-family: "JetBrains Mono", monospace;
+}
+
+.gui-guide__eyebrow {
+  margin: 0 0 0.35rem;
+  font-size: 0.58rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(74, 222, 128, 0.7);
+}
+
+.gui-guide__title {
+  margin: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #bbf7d0;
+}
+
+.gui-guide__body {
+  margin: 0.45rem 0 0.85rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  color: rgba(209, 250, 229, 0.78);
+}
+
+.gui-guide__body strong {
+  color: #4ade80;
+}
+
+.gui-guide__cta {
+  display: inline-flex;
+  width: 100%;
+  justify-content: center;
+  border: 1px solid rgba(74, 222, 128, 0.65);
+  background: rgba(34, 197, 94, 0.16);
+  color: #bbf7d0;
+  padding: 0.55rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.gui-guide__cta:hover {
+  background: rgba(34, 197, 94, 0.28);
+  border-color: rgba(74, 222, 128, 0.95);
+}
+
+.gui-guide__dismiss {
+  display: block;
+  width: 100%;
+  margin-top: 0.4rem;
+  border: none;
+  background: transparent;
+  color: rgba(209, 250, 229, 0.45);
+  font-family: inherit;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.gui-guide__dismiss:hover {
+  color: rgba(209, 250, 229, 0.8);
+}
+
+@keyframes gui-guide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gui-guide-bounce {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes mode-switch-pulse-strong {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px rgba(34, 197, 94, 0.25),
+      0 0 24px rgba(34, 197, 94, 0.4),
+      0 0 48px rgba(34, 197, 94, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px rgba(74, 222, 128, 0.45),
+      0 0 40px rgba(34, 197, 94, 0.65),
+      0 0 72px rgba(34, 197, 94, 0.3);
+    transform: scale(1.04);
+  }
 }
 
 /* Sky GUI theme — soft gray-blue cloud (not flat white / not a speech bubble) */
@@ -559,10 +743,16 @@ body:has(.gui-experience) {
 @keyframes mode-switch-pulse {
   0%,
   100% {
-    box-shadow: 0 0 16px rgba(34, 197, 94, 0.1);
+    box-shadow:
+      0 0 0 1px rgba(34, 197, 94, 0.15),
+      0 0 20px rgba(34, 197, 94, 0.25),
+      0 0 40px rgba(34, 197, 94, 0.12);
   }
   50% {
-    box-shadow: 0 0 28px rgba(34, 197, 94, 0.35);
+    box-shadow:
+      0 0 0 1px rgba(74, 222, 128, 0.35),
+      0 0 34px rgba(34, 197, 94, 0.55),
+      0 0 60px rgba(34, 197, 94, 0.22);
   }
 }
 
@@ -638,8 +828,25 @@ body:has(.gui-experience) {
 }
 
 @media (max-width: 767px) {
-  /* Compact top-right chip — no stretched cloud blob */
-  .mode-switch,
+  /* Terminal GUI button — keep green glow so people can find it */
+  .mode-switch:not(.mode-switch--sky) {
+    top: max(0.65rem, env(safe-area-inset-top)) !important;
+    right: max(0.6rem, env(safe-area-inset-right)) !important;
+    padding: 0.55rem 0.85rem !important;
+    border-radius: 0.35rem;
+    animation: mode-switch-pulse 2.2s ease-in-out infinite !important;
+  }
+
+  .mode-switch:not(.mode-switch--sky) .mode-switch__hint {
+    display: block !important;
+    font-size: 0.52rem !important;
+  }
+
+  .mode-switch:not(.mode-switch--sky).mode-switch--guide {
+    animation: mode-switch-pulse-strong 1.4s ease-in-out infinite !important;
+  }
+
+  /* Compact top-right chip — sky/TERMINAL only */
   .mode-switch.mode-switch--sky {
     top: max(0.65rem, env(safe-area-inset-top)) !important;
     bottom: auto !important;
@@ -675,7 +882,7 @@ body:has(.gui-experience) {
     display: none !important;
   }
 
-  .mode-switch__hint {
+  .mode-switch--sky .mode-switch__hint {
     display: none !important;
   }
 
@@ -685,7 +892,19 @@ body:has(.gui-experience) {
   }
 
   .mode-switch__copy {
-    gap: 0;
+    gap: 0.1rem;
+  }
+
+  .gui-guide {
+    top: max(3.6rem, calc(env(safe-area-inset-top) + 3rem));
+    right: max(0.6rem, env(safe-area-inset-right));
+    left: max(0.6rem, env(safe-area-inset-left));
+    max-width: none;
+    align-items: stretch;
+  }
+
+  .gui-guide__arrow {
+    display: none;
   }
 
   .cube-face--right span,
@@ -700,12 +919,25 @@ body:has(.gui-experience) {
 }
 
 @media (max-width: 380px) {
-  .mode-switch,
   .mode-switch.mode-switch--sky {
     padding: 0.38rem 0.62rem !important;
   }
 
+  .mode-switch:not(.mode-switch--sky) {
+    padding: 0.48rem 0.72rem !important;
+  }
+
   .mode-switch__label {
     font-size: 0.58rem !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mode-switch,
+  .mode-switch--guide,
+  .gui-guide,
+  .gui-guide__arrow-line,
+  .gui-guide__arrow-head {
+    animation: none !important;
   }
 }

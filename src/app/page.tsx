@@ -1,13 +1,17 @@
+import Link from "next/link";
 import ModeCube from "@/components/ModeCube";
 import { contacts, experience, profile, projects } from "@/data/portfolio";
+import { blogPosts } from "@/data/blog";
+import { SITE_NAV } from "@/lib/site";
 
 /**
  * Home is mostly a client 3D/terminal experience.
- * This server-rendered block gives crawlers real text about Sugam Adhikari (SA).
+ * This server-rendered block gives crawlers real text + crawlable internal links.
+ * Visible footer lives on content pages (and mobile GUI) — not fixed over the sky.
  */
 function SeoContent() {
   return (
-    <section className="sr-only" aria-label="About Sugam Adhikari">
+    <section className="sr-only" aria-label="Sugam Adhikari portfolio overview">
       <h1>
         {profile.name} (SA) — {profile.title}
       </h1>
@@ -16,6 +20,19 @@ function SeoContent() {
         Based in {profile.location}. {profile.education}
       </p>
       <p>{profile.mission}</p>
+
+      <nav aria-label="Site pages">
+        <ul>
+          {SITE_NAV.map((item) => (
+            <li key={item.href}>
+              <Link href={item.href}>{item.label}</Link>
+            </li>
+          ))}
+          <li>
+            <a href="/resume.pdf">Resume PDF</a>
+          </li>
+        </ul>
+      </nav>
 
       <h2>Experience</h2>
       <ul>
@@ -29,16 +46,27 @@ function SeoContent() {
 
       <h2>Featured projects</h2>
       <ul>
-        {projects.slice(0, 6).map((project) => (
-          <li key={project.name}>
-            <strong>{project.name}</strong> — {project.summary} Tech:{" "}
-            {project.tech.join(", ")}.
+        {projects.map((project) => (
+          <li key={project.slug}>
+            <Link href={`/projects/${project.slug}`}>
+              <strong>{project.name}</strong>
+            </Link>{" "}
+            — {project.summary} Tech: {project.tech.join(", ")}.
             {project.link ? (
               <>
                 {" "}
                 <a href={project.link}>{project.name} on GitHub</a>
               </>
             ) : null}
+          </li>
+        ))}
+      </ul>
+
+      <h2>Latest writing</h2>
+      <ul>
+        {blogPosts.map((post) => (
+          <li key={post.slug}>
+            <Link href={`/blog/${post.slug}`}>{post.title}</Link> — {post.description}
           </li>
         ))}
       </ul>

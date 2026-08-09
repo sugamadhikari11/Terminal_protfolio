@@ -7,7 +7,12 @@ import TerminalContent from "./TerminalContent";
 import { useTypewriter } from "../hooks/typeWriter";
 import { sleep } from "../utils/terminalUtils";
 
-const Terminal: React.FC = () => {
+type TerminalProps = {
+  /** Flip the cube into the visual GUI experience */
+  onOpenGui?: () => void;
+};
+
+const Terminal: React.FC<TerminalProps> = ({ onOpenGui }) => {
   const [connecting, setConnecting] = useState(true);
   const [showSSH, setShowSSH] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -68,7 +73,10 @@ const Terminal: React.FC = () => {
         )}
 
         {!connecting && <SessionInfo onComplete={handleAuthentication} />}
-        <TerminalContent isAuthenticated={isAuthenticated} />
+        <TerminalContent
+          isAuthenticated={isAuthenticated}
+          onOpenGui={onOpenGui}
+        />
       </div>
     </TerminalBorder>
   );

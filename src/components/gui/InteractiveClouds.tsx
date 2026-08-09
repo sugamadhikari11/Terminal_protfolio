@@ -5,6 +5,7 @@ import { useFrame } from "@react-three/fiber";
 import { Cloud, Clouds } from "@react-three/drei";
 import * as THREE from "three";
 import { MeshLambertMaterial } from "three";
+import { CLOUD_TEXTURE } from "./preloadModels";
 
 type CloudSpec = {
   seed: number;
@@ -74,6 +75,7 @@ export default function InteractiveClouds({
 
   return (
     <Clouds
+      texture={CLOUD_TEXTURE}
       material={MeshLambertMaterial}
       limit={veil ? 140 : 160}
       frustumCulled={false}

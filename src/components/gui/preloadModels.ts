@@ -1,7 +1,9 @@
-import { useGLTF } from "@react-three/drei";
+import { useGLTF, useTexture } from "@react-three/drei";
 import { GLTFLoader } from "three-stdlib";
 
 export const PLANE_MODEL = "/models/stylized_ww1_plane.glb";
+/** Local drei cloud sprite — avoids rawcdn.githack.com load failures. */
+export const CLOUD_TEXTURE = "/textures/cloud.png";
 /** Broken-scale asset kept for reference — do not render as primary (coords ~1e6). */
 export const POUTA_MODEL = "/models/po-uta.glb";
 
@@ -60,4 +62,9 @@ export function ensurePlaneLoaded(onProgress?: ProgressCb): Promise<void> {
 /** Fire-and-forget warm (no progress). */
 export function preloadGuiModels() {
   void ensurePlaneLoaded();
+  try {
+    useTexture.preload(CLOUD_TEXTURE);
+  } catch {
+    // ignore preload races during SSR / early boot
+  }
 }
