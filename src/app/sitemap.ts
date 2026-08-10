@@ -4,7 +4,7 @@ import { projects } from "@/data/portfolio";
 import { SITE_URL } from "@/lib/site";
 
 /** Site-wide content refresh — bump when home/about chrome changes meaningfully */
-const SITE_UPDATED = "2026-08-09";
+const SITE_UPDATED = "2026-08-10";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const staticPages: MetadataRoute.Sitemap = [
