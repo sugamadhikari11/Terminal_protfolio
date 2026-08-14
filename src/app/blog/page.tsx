@@ -15,13 +15,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     url: absoluteUrl("/blog"),
-    title: "Blog — Sugam Adhikari (SA)",
+    title: "Blog — Sugam Adhikari",
     description: "Notes on Web3, AI, and full-stack product work.",
     siteName: SITE_NAME,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Blog — Sugam Adhikari (SA)",
+    title: "Blog — Sugam Adhikari",
     description: "Notes on Web3, AI, and full-stack product work.",
     creator: "@sugamadhikari",
   },

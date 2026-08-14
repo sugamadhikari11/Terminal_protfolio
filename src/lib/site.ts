@@ -1,5 +1,5 @@
 export const SITE_URL = "https://sugamadhikari.com.np";
-export const SITE_NAME = "Sugam Adhikari — SA Portfolio";
+export const SITE_NAME = "Sugam Adhikari Portfolio";
 
 export const SITE_NAV = [
   { href: "/", label: "Home" },

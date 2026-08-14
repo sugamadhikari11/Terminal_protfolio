@@ -6,9 +6,9 @@ import { SITE_NAME, SITE_URL } from "@/lib/site";
 import { globalGraph } from "@/lib/schema";
 import { JsonLdScript } from "@/components/site/JsonLdScript";
 
-const TITLE = "Sugam Adhikari (SA) | Full-Stack, Web3 & Data Science Portfolio";
+const TITLE = "Sugam Adhikari | Full-Stack, Web3 & Data Science Portfolio";
 const DESCRIPTION =
-  "Sugam Adhikari (SA) — full-stack developer in Kathmandu, Nepal. Portfolio of Next.js, Web3, Solidity, and data science projects. Interactive terminal + 3D sky experience.";
+  "Full-stack developer in Kathmandu, Nepal. Next.js, Web3, Solidity, and data science projects.";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -25,10 +25,10 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
     default: TITLE,
-    template: "%s | Sugam Adhikari (SA)",
+    template: "%s | Sugam Adhikari",
   },
   description: DESCRIPTION,
-  applicationName: "SA Portfolio",
+  applicationName: "Sugam Adhikari Portfolio",
   authors: [{ name: profile.name, url: SITE_URL }],
   creator: profile.name,
   publisher: profile.name,

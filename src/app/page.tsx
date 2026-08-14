@@ -15,7 +15,7 @@ function SeoContent() {
   return (
     <section className="sr-only" aria-label="Sugam Adhikari portfolio overview">
       <h1>
-        {profile.name} (SA) — {profile.title}
+        {profile.name} — {profile.title}
       </h1>
       <p>{profile.tagline}</p>
       <p>

@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const alt =
-  "Sugam Adhikari (SA) — full-stack, Web3, and data science portfolio";
+  "Sugam Adhikari — full-stack, Web3, and data science portfolio";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
