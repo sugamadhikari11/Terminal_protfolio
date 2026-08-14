@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { blogPosts } from "@/data/blog";
-import { profile } from "@/data/portfolio";
+import { JsonLdScript } from "@/components/site/JsonLdScript";
 import { SiteChrome } from "@/components/site/SiteChrome";
 import { guiInk as ink } from "@/components/site/guiInk";
-import { absoluteUrl, SITE_NAME, SITE_URL } from "@/lib/site";
+import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { blogIndexGraph } from "@/lib/schema";
+import { blogPosts } from "@/data/blog";
 
 export const metadata: Metadata = {
   title: "Blog — Web3, AI & Full-Stack Notes",
@@ -27,32 +28,12 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "Blog",
-  url: absoluteUrl("/blog"),
-  name: "Sugam Adhikari Blog",
-  description: "Notes on Web3, AI, and full-stack product work.",
-  author: { "@type": "Person", "@id": `${SITE_URL}/#person`, name: profile.name },
-  blogPost: blogPosts.map((post) => ({
-    "@type": "BlogPosting",
-    headline: post.title,
-    url: absoluteUrl(`/blog/${post.slug}`),
-    datePublished: post.publishedAt,
-    dateModified: post.updatedAt,
-    description: post.description,
-  })),
-};
-
 export default function BlogIndexPage() {
   const posts = [...blogPosts].sort((a, b) => b.publishedAt.localeCompare(a.publishedAt));
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLdScript id="ld-json-blog" data={blogIndexGraph()} />
       <SiteChrome title="Blog">
         <main className="mx-auto w-full px-[10%] py-12 md:py-16">
           <section className="mb-12">

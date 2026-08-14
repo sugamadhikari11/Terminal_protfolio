@@ -9,6 +9,7 @@ import {
   skillCategories,
 } from "@/data/portfolio";
 import { guiInk as ink } from "@/components/site/guiInk";
+import { ABOUT_FAQ } from "@/lib/schema";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -232,6 +233,30 @@ export default function AboutView() {
               </motion.div>
             ))}
           </Stagger>
+        </section>
+      </Reveal>
+
+      {/* FAQ — visible copy must match FAQPage JSON-LD on /about */}
+      <Reveal className="mt-10" delay={0.03}>
+        <section
+          className={`rounded-3xl border bg-white/40 px-6 py-7 shadow-[0_12px_40px_rgba(7,21,37,0.06)] backdrop-blur-md md:px-8 ${ink.line}`}
+        >
+          <p className={`mb-2 font-mono text-[10px] uppercase tracking-[0.32em] ${ink.mute}`}>
+            FAQ
+          </p>
+          <h2 className={`font-mono text-xl font-semibold tracking-tight ${ink.strong}`}>
+            Common questions
+          </h2>
+          <dl className="mt-6 space-y-6">
+            {ABOUT_FAQ.map((item) => (
+              <div key={item.question}>
+                <dt className={`font-mono text-sm font-semibold ${ink.strong}`}>
+                  {item.question}
+                </dt>
+                <dd className={`mt-2 text-sm leading-relaxed ${ink.body}`}>{item.answer}</dd>
+              </div>
+            ))}
+          </dl>
         </section>
       </Reveal>
 

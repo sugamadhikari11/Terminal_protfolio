@@ -1,7 +1,9 @@
 import Link from "next/link";
 import ModeCube from "@/components/ModeCube";
+import { JsonLdScript } from "@/components/site/JsonLdScript";
 import { contacts, experience, profile, projects } from "@/data/portfolio";
 import { blogPosts } from "@/data/blog";
+import { homeGraph } from "@/lib/schema";
 import { SITE_NAV } from "@/lib/site";
 
 /**
@@ -88,6 +90,7 @@ function SeoContent() {
 export default function HomePage() {
   return (
     <>
+      <JsonLdScript id="ld-json-home" data={homeGraph()} />
       <SeoContent />
       <ModeCube />
     </>

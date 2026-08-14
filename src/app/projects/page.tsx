@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { projects, contacts } from "@/data/portfolio";
+import { JsonLdScript } from "@/components/site/JsonLdScript";
 import { SiteChrome } from "@/components/site/SiteChrome";
 import { guiInk as ink } from "@/components/site/guiInk";
-import { absoluteUrl, SITE_NAME, SITE_URL } from "@/lib/site";
-import { profile } from "@/data/portfolio";
+import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { projectsIndexGraph } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "Projects — Sugam Adhikari",
@@ -27,31 +28,10 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "CollectionPage",
-  url: absoluteUrl("/projects"),
-  name: "Projects — Sugam Adhikari",
-  author: { "@type": "Person", "@id": `${SITE_URL}/#person`, name: profile.name },
-  mainEntity: {
-    "@type": "ItemList",
-    itemListElement: projects.map((p, i) => ({
-      "@type": "ListItem",
-      position: i + 1,
-      name: p.name,
-      description: p.description,
-      url: absoluteUrl(`/projects/${p.slug}`),
-    })),
-  },
-};
-
 export default function ProjectsPage() {
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLdScript id="ld-json-projects" data={projectsIndexGraph()} />
       <SiteChrome title="Projects">
         <main className="mx-auto w-full px-[10%] py-12 md:py-16">
           <section className="mb-12">

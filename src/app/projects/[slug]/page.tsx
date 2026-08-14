@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { contacts, getProject, profile, projects } from "@/data/portfolio";
+import { contacts, getProject, projects } from "@/data/portfolio";
+import { JsonLdScript } from "@/components/site/JsonLdScript";
 import { SiteChrome } from "@/components/site/SiteChrome";
 import { guiInk as ink } from "@/components/site/guiInk";
-import { absoluteUrl, SITE_NAME, SITE_URL } from "@/lib/site";
+import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { projectDetailGraph } from "@/lib/schema";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -43,29 +45,11 @@ export default async function ProjectDetailPage({ params }: Props) {
   const project = getProject(slug);
   if (!project) notFound();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "SoftwareApplication",
-    name: project.name,
-    description: project.description,
-    applicationCategory: "DeveloperApplication",
-    operatingSystem: "Web",
-    author: {
-      "@type": "Person",
-      "@id": `${SITE_URL}/#person`,
-      name: profile.name,
-    },
-    url: absoluteUrl(`/projects/${project.slug}`),
-    ...(project.link ? { codeRepository: project.link, downloadUrl: project.link } : {}),
-    keywords: project.tech.join(", "),
-  };
+  const jsonLd = projectDetailGraph(project);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLdScript id={`ld-json-project-${project.slug}`} data={jsonLd} />
       <SiteChrome title="Projects">
         <main className="mx-auto w-full px-[10%] py-12 md:py-16">
           <p className={`mb-3 font-mono text-[10px] uppercase tracking-[0.35em] ${ink.mute}`}>

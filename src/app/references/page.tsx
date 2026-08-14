@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { profile } from "@/data/portfolio";
+import { JsonLdScript } from "@/components/site/JsonLdScript";
 import { SiteChrome } from "@/components/site/SiteChrome";
 import { guiInk as ink } from "@/components/site/guiInk";
 import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { referencesGraph } from "@/lib/schema";
 
 export const metadata: Metadata = {
   title: "References & Credits — Sugam Adhikari",
@@ -63,7 +65,9 @@ const REFS = [
 
 export default function ReferencesPage() {
   return (
-    <SiteChrome title="References">
+    <>
+      <JsonLdScript id="ld-json-references" data={referencesGraph()} />
+      <SiteChrome title="References">
       <main className="mx-auto w-full px-[10%] py-12 md:py-16">
         <section className="mb-12">
           <p className={`mb-3 font-mono text-[10px] uppercase tracking-[0.35em] ${ink.mute}`}>
@@ -113,6 +117,7 @@ export default function ReferencesPage() {
           .
         </p>
       </main>
-    </SiteChrome>
+      </SiteChrome>
+    </>
   );
 }

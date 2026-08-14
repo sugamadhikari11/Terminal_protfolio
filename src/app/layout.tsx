@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { Providers } from "./providers";
-import { profile, contacts } from "@/data/portfolio";
-import { SITE_NAV, SITE_NAME, SITE_URL } from "@/lib/site";
+import { profile } from "@/data/portfolio";
+import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { globalGraph } from "@/lib/schema";
+import { JsonLdScript } from "@/components/site/JsonLdScript";
 
 const TITLE = "Sugam Adhikari (SA) | Full-Stack, Web3 & Data Science Portfolio";
 const DESCRIPTION =
@@ -84,65 +86,6 @@ export const metadata: Metadata = {
   },
 };
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": `${SITE_URL}/#website`,
-      url: SITE_URL,
-      name: SITE_NAME,
-      description: DESCRIPTION,
-      publisher: { "@id": `${SITE_URL}/#person` },
-      inLanguage: "en",
-    },
-    {
-      "@type": "Person",
-      "@id": `${SITE_URL}/#person`,
-      name: profile.name,
-      alternateName: "SA",
-      url: SITE_URL,
-      jobTitle: profile.title,
-      description: profile.tagline,
-      address: {
-        "@type": "PostalAddress",
-        addressLocality: "Kathmandu",
-        addressCountry: "NP",
-      },
-      sameAs: contacts
-        .map((c) => c.href)
-        .filter((href) => href.startsWith("http")),
-      knowsAbout: [
-        "Full-stack development",
-        "Web3",
-        "Solidity",
-        "Next.js",
-        "Data science",
-        "React",
-        "TypeScript",
-      ],
-    },
-    {
-      "@type": "ProfilePage",
-      "@id": `${SITE_URL}/#profile`,
-      url: SITE_URL,
-      name: TITLE,
-      description: DESCRIPTION,
-      mainEntity: { "@id": `${SITE_URL}/#person` },
-    },
-    {
-      "@type": "SiteNavigationElement",
-      "@id": `${SITE_URL}/#nav`,
-      name: "Primary",
-      hasPart: SITE_NAV.map((item) => ({
-        "@type": "WebPage",
-        name: item.label,
-        url: item.href === "/" ? SITE_URL : `${SITE_URL}${item.href}`,
-      })),
-    },
-  ],
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -156,10 +99,7 @@ export default function RootLayout({
         <link rel="author" href={SITE_URL} />
       </head>
       <body suppressHydrationWarning>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-        />
+        <JsonLdScript id="ld-json-global" data={globalGraph()} />
         <Providers>{children}</Providers>
       </body>
     </html>

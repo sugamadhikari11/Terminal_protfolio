@@ -3,9 +3,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { blogPosts, getBlogPost } from "@/data/blog";
 import { profile } from "@/data/portfolio";
+import { JsonLdScript } from "@/components/site/JsonLdScript";
 import { SiteChrome } from "@/components/site/SiteChrome";
 import { guiInk as ink } from "@/components/site/guiInk";
-import { absoluteUrl, SITE_NAME, SITE_URL } from "@/lib/site";
+import { absoluteUrl, SITE_NAME } from "@/lib/site";
+import { blogPostGraph } from "@/lib/schema";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -48,29 +50,11 @@ export default async function BlogPostPage({ params }: Props) {
   const post = getBlogPost(slug);
   if (!post) notFound();
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: post.title,
-    description: post.description,
-    datePublished: post.publishedAt,
-    dateModified: post.updatedAt,
-    author: {
-      "@type": "Person",
-      "@id": `${SITE_URL}/#person`,
-      name: profile.name,
-      url: SITE_URL,
-    },
-    mainEntityOfPage: absoluteUrl(`/blog/${post.slug}`),
-    keywords: post.tags.join(", "),
-  };
+  const jsonLd = blogPostGraph(post);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
+      <JsonLdScript id={`ld-json-blog-${post.slug}`} data={jsonLd} />
       <SiteChrome title="Blog">
         <article className="mx-auto w-full px-[10%] py-12 md:py-16">
           <p className={`mb-3 font-mono text-[10px] uppercase tracking-[0.35em] ${ink.mute}`}>
